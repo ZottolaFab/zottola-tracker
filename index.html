@@ -60,6 +60,8 @@
         'Shop Work'
       ];
 
+      const defaultWorkTypes = ['Beams', 'Plates', 'Miscellaneous'];
+
       const defaultConfig = {
         employees: [
           { name: 'Fred', rate: 46.18 },
@@ -72,21 +74,25 @@
           { name: 'Darin', rate: 30.03 },
           { name: 'Kate', rate: 30.03 },
           { name: 'Tony', rate: 25.84 }
-        ],
-        workTypes: ['Beams', 'Plates', 'Miscellaneous']
+        ]
       };
 
-      const types = ['Shop', 'Office', 'Travel', 'Onsite'];
+      const types = ['Office', 'Shop', 'Onsite', 'Travel'];
       const [projects, setProjects] = useState(() => {
         const stored = localStorage.getItem('zottola_projects');
         return stored ? JSON.parse(stored) : defaultProjects;
       });
+      const [workTypes, setWorkTypes] = useState(() => {
+        const stored = localStorage.getItem('zottola_workTypes');
+        return stored ? JSON.parse(stored) : defaultWorkTypes;
+      });
       const [emp, setEmp] = useState(defaultConfig.employees[0].name);
       const [proj, setProj] = useState(projects[0] || defaultProjects[0]);
-      const [workType, setWorkType] = useState(defaultConfig.workTypes[0]);
+      const [workType, setWorkType] = useState(workTypes[0] || defaultWorkTypes[0]);
       const [data, setData] = useState({});
       const [view, setView] = useState('track');
       const [newProject, setNewProject] = useState('');
+      const [newWorkType, setNewWorkType] = useState('');
 
       const today = new Date().toISOString().split('T')[0];
       const storageKey = `zottola_hours_${today}`;
@@ -103,6 +109,10 @@
       useEffect(() => {
         localStorage.setItem('zottola_projects', JSON.stringify(projects));
       }, [projects]);
+
+      useEffect(() => {
+        localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
+      }, [workTypes]);
 
       const addProject = () => {
         if (newProject.trim() && !projects.includes(newProject.trim())) {
@@ -127,6 +137,29 @@
         }
       };
 
+      const addWorkType = () => {
+        if (newWorkType.trim() && !workTypes.includes(newWorkType.trim())) {
+          setWorkTypes([...workTypes, newWorkType.trim()]);
+          setNewWorkType('');
+        }
+      };
+
+      const deleteWorkType = (wType) => {
+        if (confirm(`Delete "${wType}"?`)) {
+          setWorkTypes(workTypes.filter(w => w !== wType));
+          if (workType === wType && workTypes.length > 1) {
+            setWorkType(workTypes[0]);
+          }
+        }
+      };
+
+      const resetWorkTypes = () => {
+        if (confirm('Reset to default work types?')) {
+          setWorkTypes(defaultWorkTypes);
+          setWorkType(defaultWorkTypes[0]);
+        }
+      };
+
       const key = (e, p, t, w) => `${e}|${p}|${t}|${w}`;
       const getRate = () => defaultConfig.employees.find(x => x.name === emp)?.rate || 0;
       
@@ -142,43 +175,32 @@
         types.forEach(t => {
           hours += data[key(e, p, t, w)] || 0;
         });
-        return { hours, cost: hours * getRate() };
+        return hours;
       };
 
       const getProjectTotals = (e, p) => {
         let hours = 0;
-        defaultConfig.workTypes.forEach(w => {
+        workTypes.forEach(w => {
           types.forEach(t => {
             hours += data[key(e, p, t, w)] || 0;
           });
         });
-        return { hours, cost: hours * getRate() };
-      };
-
-      const getDayTotals = (e) => {
-        let hours = 0, cost = 0;
-        projects.forEach(p => {
-          const t = getProjectTotals(e, p);
-          hours += t.hours;
-          cost += t.cost;
-        });
-        return { hours, cost };
+        return hours;
       };
 
       const exportCSV = () => {
-        let csv = 'Employee,Project,Work Type,Shop,Office,Travel,Onsite,Total Hours,Labor Cost\n';
+        let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
         
         defaultConfig.employees.forEach(e => {
           projects.forEach(p => {
-            defaultConfig.workTypes.forEach(w => {
-              const vals = { Shop: 0, Office: 0, Travel: 0, Onsite: 0 };
+            workTypes.forEach(w => {
+              const vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
               types.forEach(t => {
                 vals[t] = data[key(e.name, p, t, w)] || 0;
               });
               const totalHours = Object.values(vals).reduce((a, b) => a + b, 0);
               if (totalHours > 0) {
-                const cost = totalHours * e.rate;
-                csv += `${e.name},${p},${w},${vals.Shop.toFixed(2)},${vals.Office.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${totalHours.toFixed(2)},${cost.toFixed(2)}\n`;
+                csv += `${today},${e.name},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${totalHours.toFixed(2)}\n`;
               }
             });
           });
@@ -192,20 +214,14 @@
         a.click();
       };
 
-      const workTypeTotals = getWorkTypeTotals(emp, proj, workType);
-      const projectTotals = getProjectTotals(emp, proj);
-      const dayTotals = getDayTotals(emp);
-
       return (
         <div style={{ background: 'var(--color-background-primary)', padding: '1rem', borderRadius: 'var(--border-radius-lg)' }}>
-          <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
-            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
+          <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '0.5px solid var(--color-border-tertiary)', textAlign: 'center' }}>
+            <img src="Zottola_Fab.jpg" style={{ maxWidth: '80px', height: 'auto', marginBottom: '0.5rem' }} alt="Zottola Fab Logo" />
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Shop Tracker</h2>
+            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '4px 0 0' }}>
               {new Date().toLocaleDateString()}
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <img src="Zottola_Fab.jpg" style={{ maxWidth: '100px', height: 'auto' }} alt="Zottola Fab Logo" />
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Shop Hours + Labor Costs</h2>
-            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem', borderBottom: '0.5px solid var(--color-border-tertiary)', overflowX: 'auto' }}>
@@ -292,47 +308,17 @@
                     background: 'var(--color-background-primary)'
                   }}
                 >
-                  {defaultConfig.workTypes.map(w => (
+                  {workTypes.map(w => (
                     <option key={w} value={w}>{w}</option>
                   ))}
                 </select>
-                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '6px 0 0' }}>
-                  Examples: Beams, Plates, Miscellaneous
-                </p>
-              </div>
-
-              <div style={{ background: 'var(--color-background-secondary)', padding: '1rem', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)' }}>
-                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 4px', textTransform: 'uppercase' }}>
-                  {proj}
-                </p>
-                <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: '0 0 12px', fontWeight: 500 }}>
-                  {workType}
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px' }}>
-                  {types.map(t => (
-                    <div key={t} style={{ background: 'var(--color-background-primary)', padding: '12px', borderRadius: 'var(--border-radius-md)', textAlign: 'center', border: '0.5px solid var(--color-border-tertiary)' }}>
-                      <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: '0 0 6px' }}>{t}</p>
-                      <p style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>
-                        {(data[key(emp, proj, t, workType)] || 0).toFixed(1)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ borderTop: '0.5px solid var(--color-border-tertiary)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 500 }}>This work type:</span>
-                  <span style={{ fontSize: '16px', fontWeight: 500 }}>${workTypeTotals.cost.toFixed(2)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-text-secondary)', paddingTop: '8px', borderTop: '0.5px solid var(--color-border-tertiary)' }}>
-                  <span>Total on project (all work types): {projectTotals.hours.toFixed(1)}h</span>
-                  <span>${projectTotals.cost.toFixed(2)}</span>
-                </div>
               </div>
 
               <div>
                 <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '12px', fontWeight: 500 }}>
                   Add hours
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px' }}>
                   {types.map(t => (
                     <div key={t} style={{ display: 'flex', gap: '6px' }}>
                       <button
@@ -349,7 +335,7 @@
                           minHeight: '44px'
                         }}
                       >
-                        +0.5h
+                        +0.5h {t}
                       </button>
                       <button
                         onClick={() => addHours(emp, proj, t, workType, 1)}
@@ -371,8 +357,8 @@
                   ))}
                 </div>
 
-                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '16px 0 8px' }}>
-                  Or edit directly
+                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '12px 0 8px' }}>
+                  Manual adjustment
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                   {types.map(t => (
@@ -405,31 +391,19 @@
                 </div>
               </div>
 
-              <div style={{ background: 'var(--color-background-info)', padding: '1rem', borderRadius: 'var(--border-radius-md)' }}>
-                <p style={{ fontSize: '12px', color: 'var(--color-text-info)', margin: '0 0 12px', textTransform: 'uppercase' }}>
-                  {emp} - Today total
+              <div style={{ background: 'var(--color-background-secondary)', padding: '1rem', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)' }}>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 8px', textTransform: 'uppercase' }}>
+                  {proj} - {workType}
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                   {types.map(t => (
-                    <div key={t} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '0.5px solid rgba(0,0,0,0.1)' }}>
-                      <span style={{ fontSize: '13px', color: 'var(--color-text-info)' }}>{t}</span>
-                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-info)' }}>
-                        {(projects.reduce((sum, p) => {
-                          return sum + defaultConfig.workTypes.reduce((wsum, w) => {
-                            return wsum + (data[key(emp, p, t, w)] || 0);
-                          }, 0);
-                        }, 0)).toFixed(1)}h
-                      </span>
+                    <div key={t} style={{ background: 'var(--color-background-primary)', padding: '12px', borderRadius: 'var(--border-radius-md)', textAlign: 'center', border: '0.5px solid var(--color-border-tertiary)' }}>
+                      <p style={{ fontSize: '10px', color: 'var(--color-text-secondary)', margin: '0 0 6px', fontWeight: 500 }}>{t}</p>
+                      <p style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>
+                        {(data[key(emp, proj, t, workType)] || 0).toFixed(1)}h
+                      </p>
                     </div>
                   ))}
-                  <div style={{ paddingTop: '8px', borderTop: '0.5px solid rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'space-between', fontWeight: 500 }}>
-                    <span style={{ fontSize: '13px', color: 'var(--color-text-info)' }}>Total hours</span>
-                    <span style={{ fontSize: '15px', color: 'var(--color-text-info)' }}>{dayTotals.hours.toFixed(1)}h</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-info)' }}>Labor cost</span>
-                    <span style={{ fontSize: '16px', fontWeight: 500, color: 'var(--color-text-info)' }}>${dayTotals.cost.toFixed(2)}</span>
-                  </div>
                 </div>
               </div>
 
@@ -447,7 +421,7 @@
                   minHeight: '44px'
                 }}
               >
-                Export hours + costs
+                Export
               </button>
             </div>
           )}
@@ -479,34 +453,27 @@
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {projects.map(p => {
                   const pTotals = getProjectTotals(emp, p);
-                  if (pTotals.hours === 0) return null;
+                  if (pTotals === 0) return null;
                   
                   return (
                     <div key={p} style={{ background: 'var(--color-background-secondary)', padding: '12px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)' }}>
                       <p style={{ fontSize: '13px', fontWeight: 500, margin: '0 0 12px' }}>{p}</p>
                       
-                      {defaultConfig.workTypes.map(w => {
+                      {workTypes.map(w => {
                         const wTotals = getWorkTypeTotals(emp, p, w);
-                        if (wTotals.hours === 0) return null;
+                        if (wTotals === 0) return null;
                         
                         return (
                           <div key={w} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
                             <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: '0 0 6px', fontWeight: 500 }}>{w}</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                              <span style={{ color: 'var(--color-text-secondary)' }}>Hours</span>
-                              <span style={{ fontWeight: 500 }}>{wTotals.hours.toFixed(1)}h</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                              <span style={{ color: 'var(--color-text-secondary)' }}>Cost</span>
-                              <span style={{ fontWeight: 500 }}>${wTotals.cost.toFixed(2)}</span>
-                            </div>
+                            <p style={{ fontSize: '14px', fontWeight: 500 }}>{wTotals.toFixed(1)}h</p>
                           </div>
                         );
                       })}
                       
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 500, paddingTop: '8px' }}>
                         <span>Project total</span>
-                        <span>${pTotals.cost.toFixed(2)}</span>
+                        <span>{pTotals.toFixed(1)}h</span>
                       </div>
                     </div>
                   );
@@ -609,7 +576,85 @@
                   minHeight: '44px'
                 }}
               >
-                Reset to defaults (28 projects)
+                Reset projects to defaults
+              </button>
+
+              <div style={{ background: 'var(--color-background-info)', padding: '12px', borderRadius: 'var(--border-radius-md)', fontSize: '13px', color: 'var(--color-text-info)', marginTop: '1rem' }}>
+                <p style={{ margin: '0 0 8px', fontWeight: 500 }}>Manage Work Types</p>
+                <p style={{ margin: 0 }}>Current types: {workTypes.length}</p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  placeholder="New work type"
+                  value={newWorkType}
+                  onChange={(e) => setNewWorkType(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addWorkType()}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    fontSize: '14px',
+                    border: '0.5px solid var(--color-border-secondary)',
+                    borderRadius: 'var(--border-radius-md)',
+                    background: 'var(--color-background-primary)'
+                  }}
+                />
+                <button
+                  onClick={addWorkType}
+                  style={{
+                    padding: '10px 16px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    border: '0.5px solid var(--color-border-secondary)',
+                    background: 'var(--color-background-primary)',
+                    borderRadius: 'var(--border-radius-md)',
+                    cursor: 'pointer',
+                    minHeight: '44px'
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                {workTypes.map(w => (
+                  <div key={w} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'var(--color-background-secondary)', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)', fontSize: '13px' }}>
+                    <span>{w}</span>
+                    <button
+                      onClick={() => deleteWorkType(w)}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        border: '0.5px solid var(--color-border-warning)',
+                        background: 'transparent',
+                        color: 'var(--color-text-warning)',
+                        borderRadius: 'var(--border-radius-md)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={resetWorkTypes}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  border: '0.5px solid var(--color-border-secondary)',
+                  background: 'var(--color-background-primary)',
+                  borderRadius: 'var(--border-radius-md)',
+                  cursor: 'pointer',
+                  minHeight: '44px'
+                }}
+              >
+                Reset work types to defaults
               </button>
             </div>
           )}
@@ -617,19 +662,10 @@
           {view === 'settings' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ background: 'var(--color-background-info)', padding: '12px', borderRadius: 'var(--border-radius-md)', fontSize: '13px', color: 'var(--color-text-info)' }}>
-                <p style={{ margin: '0 0 8px', fontWeight: 500 }}>Current setup (Live from Master Report)</p>
+                <p style={{ margin: '0 0 8px', fontWeight: 500 }}>App Status</p>
                 <p style={{ margin: '0 0 4px' }}>Employees: {defaultConfig.employees.length}</p>
                 <p style={{ margin: '0 0 4px' }}>Projects: {projects.length}</p>
-                <p style={{ margin: 0 }}>Work Types: {defaultConfig.workTypes.length}</p>
-              </div>
-
-              <div style={{ background: 'var(--color-background-secondary)', padding: '12px', borderRadius: 'var(--border-radius-md)', fontSize: '12px' }}>
-                <p style={{ margin: '0 0 8px', fontWeight: 500, color: 'var(--color-text-primary)' }}>Work Types:</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {defaultConfig.workTypes.map(w => (
-                    <div key={w} style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>• {w}</div>
-                  ))}
-                </div>
+                <p style={{ margin: 0 }}>Work Types: {workTypes.length}</p>
               </div>
 
               <button
@@ -652,7 +688,7 @@
                   minHeight: '44px'
                 }}
               >
-                Clear today
+                Clear today data
               </button>
             </div>
           )}
