@@ -4,725 +4,550 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zottola Shop Tracker</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabler-icons@latest/tabler-icons.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f5f5f5;
       color: #333;
+      padding: 1rem;
     }
-    #root { padding: 1rem; max-width: 100%; }
+    .container {
+      max-width: 100%;
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .header img {
+      max-width: 80px;
+      margin-bottom: 0.5rem;
+    }
+    .header h2 {
+      font-size: 18px;
+      margin: 0 0 4px 0;
+    }
+    .header p {
+      font-size: 12px;
+      color: #999;
+      margin: 0;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e0e0e0;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 8px 0;
+      font-size: 13px;
+      cursor: pointer;
+      color: #999;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      color: #333;
+      border-bottom-color: #333;
+      font-weight: 500;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .field-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    button:hover {
+      background: #f5f5f5;
+    }
+    .summary-box {
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 1rem;
+    }
+    .summary-title {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .hours-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .hour-box {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+    }
+    .hour-label {
+      font-size: 10px;
+      color: #999;
+      margin-bottom: 6px;
+    }
+    .hour-value {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .info-box {
+      background: #e3f2fd;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #1976d2;
+      margin-bottom: 1rem;
+    }
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .project-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      font-size: 13px;
+    }
+    .delete-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid #f44336;
+      background: transparent;
+      color: #f44336;
+    }
+    .warning-btn {
+      border: 1px solid #f44336;
+      color: #f44336;
+      background: transparent;
+    }
     @media (prefers-color-scheme: dark) {
-      body { background: #1a1a1a; color: #f0f0f0; }
+      body { background: #1a1a1a; }
+      .container { background: #2a2a2a; color: #f0f0f0; }
+      select, input[type="text"], input[type="number"] {
+        background: #333;
+        color: #f0f0f0;
+        border-color: #444;
+      }
+      button { background: #333; color: #f0f0f0; border-color: #444; }
+      button:hover { background: #444; }
+      .summary-box { background: #333; border-color: #444; }
+      .hour-box { background: #2a2a2a; border-color: #444; }
+      .project-item { background: #333; border-color: #444; }
     }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const React = window.React;
-    const { useState, useEffect } = React;
-    const ReactDOM = window.ReactDOM;
+  <div class="container">
+    <div class="header">
+      <img src="Zottola_Fab.jpg" alt="Zottola Fab Logo" onerror="this.style.display='none'">
+      <h2>Shop Tracker</h2>
+      <p id="todayDate"></p>
+    </div>
 
-    function ShopTracker() {
-      const defaultProjects = [
-        '100 Industry Drive Hazelwood',
-        '28th Street Bridge',
-        'Alpine Lodge',
-        'BBL',
-        'Cecil Township',
-        'Crile',
-        'Daloia Residence',
-        'GSL',
-        'Gardian',
-        'General',
-        'Hickory Rail',
-        'Hosch',
-        'House Josh Rail',
-        'House Rail',
-        'Innovative',
-        'Jadhav',
-        'Jendoco',
-        'Leetsdale',
-        'MA Dunn Construction',
-        'Manthy',
-        'Miike Wertz',
-        'Minerd',
-        'Minerd 188571-1',
-        'Minerd 192258',
-        'Minerd 195298',
-        'Noble Residence',
-        'Other',
-        'Shop Work'
-      ];
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('track')">Track</button>
+      <button class="tab-btn" onclick="switchTab('summary')">Summary</button>
+      <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
+      <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+    </div>
 
-      const defaultWorkTypes = ['Beams', 'Plates', 'Miscellaneous'];
-
-      const defaultConfig = {
-        employees: [
-          { name: 'Fred', rate: 46.18 },
-          { name: 'Jim', rate: 51.66 },
-          { name: 'Laura', rate: 46.18 },
-          { name: 'Mark', rate: 32.30 },
-          { name: 'Jeff', rate: 38.58 },
-          { name: 'Rich', rate: 38.58 },
-          { name: 'Cody', rate: 29.07 },
-          { name: 'Darin', rate: 30.03 },
-          { name: 'Kate', rate: 30.03 },
-          { name: 'Tony', rate: 25.84 }
-        ]
-      };
-
-      const types = ['Office', 'Shop', 'Onsite', 'Travel'];
-      const [projects, setProjects] = useState(() => {
-        const stored = localStorage.getItem('zottola_projects');
-        return stored ? JSON.parse(stored) : defaultProjects;
-      });
-      const [workTypes, setWorkTypes] = useState(() => {
-        const stored = localStorage.getItem('zottola_workTypes');
-        return stored ? JSON.parse(stored) : defaultWorkTypes;
-      });
-      const [emp, setEmp] = useState(defaultConfig.employees[0].name);
-      const [proj, setProj] = useState(projects[0] || defaultProjects[0]);
-      const [workType, setWorkType] = useState(workTypes[0] || defaultWorkTypes[0]);
-      const [category, setCategory] = useState('');
-      const [data, setData] = useState({});
-      const [view, setView] = useState('track');
-      const [newProject, setNewProject] = useState('');
-      const [newWorkType, setNewWorkType] = useState('');
-
-      const today = new Date().toISOString().split('T')[0];
-      const storageKey = `zottola_hours_${today}`;
-
-      useEffect(() => {
-        const stored = localStorage.getItem(storageKey);
-        if (stored) setData(JSON.parse(stored));
-      }, []);
-
-      useEffect(() => {
-        localStorage.setItem(storageKey, JSON.stringify(data));
-      }, [data]);
-
-      useEffect(() => {
-        localStorage.setItem('zottola_projects', JSON.stringify(projects));
-      }, [projects]);
-
-      useEffect(() => {
-        localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
-      }, [workTypes]);
-
-      const addProject = () => {
-        if (newProject.trim() && !projects.includes(newProject.trim())) {
-          setProjects([...projects, newProject.trim()]);
-          setNewProject('');
-        }
-      };
-
-      const deleteProject = (projectName) => {
-        if (confirm(`Delete "${projectName}"?`)) {
-          setProjects(projects.filter(p => p !== projectName));
-          if (proj === projectName && projects.length > 1) {
-            setProj(projects[0]);
-          }
-        }
-      };
-
-      const resetProjects = () => {
-        if (confirm('Reset to default 28 projects?')) {
-          setProjects(defaultProjects);
-          setProj(defaultProjects[0]);
-        }
-      };
-
-      const addWorkType = () => {
-        if (newWorkType.trim() && !workTypes.includes(newWorkType.trim())) {
-          setWorkTypes([...workTypes, newWorkType.trim()]);
-          setNewWorkType('');
-        }
-      };
-
-      const deleteWorkType = (wType) => {
-        if (confirm(`Delete "${wType}"?`)) {
-          setWorkTypes(workTypes.filter(w => w !== wType));
-          if (workType === wType && workTypes.length > 1) {
-            setWorkType(workTypes[0]);
-          }
-        }
-      };
-
-      const resetWorkTypes = () => {
-        if (confirm('Reset to default work types?')) {
-          setWorkTypes(defaultWorkTypes);
-          setWorkType(defaultWorkTypes[0]);
-        }
-      };
-
-      const key = (e, p, t, w, c) => `${e}|${p}|${t}|${w}|${c}`;
-      const getRate = () => defaultConfig.employees.find(x => x.name === emp)?.rate || 0;
-      
-      const addHours = (e, p, t, w, c, n) => {
-        setData(prev => {
-          const k = key(e, p, t, w, c);
-          return { ...prev, [k]: Math.max(0, (prev[k] || 0) + n) };
-        });
-      };
-
-      const getWorkTypeTotals = (e, p, w, c) => {
-        let hours = 0;
-        types.forEach(t => {
-          hours += data[key(e, p, t, w, c)] || 0;
-        });
-        return hours;
-      };
-
-      const getProjectTotals = (e, p) => {
-        let hours = 0;
-        workTypes.forEach(w => {
-          types.forEach(t => {
-            hours += data[key(e, p, t, w, '')] || 0;
-          });
-        });
-        return hours;
-      };
-
-      const exportCSV = () => {
-        let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Onsite,Travel,Total Hours\n';
-        
-        defaultConfig.employees.forEach(e => {
-          projects.forEach(p => {
-            workTypes.forEach(w => {
-              const vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
-              types.forEach(t => {
-                vals[t] = data[key(e.name, p, t, w, '')] || 0;
-              });
-              const totalHours = Object.values(vals).reduce((a, b) => a + b, 0);
-              if (totalHours > 0) {
-                csv += `${today},${e.name},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${totalHours.toFixed(2)}\n`;
-              }
-            });
-          });
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `zottola_hours_${today}.csv`;
-        a.click();
-      };
-
-      return (
-        <div style={{ background: 'var(--color-background-primary)', padding: '1rem', borderRadius: 'var(--border-radius-lg)' }}>
-          <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '0.5px solid var(--color-border-tertiary)', textAlign: 'center' }}>
-            <img src="Zottola_Fab.jpg" style={{ maxWidth: '80px', height: 'auto', marginBottom: '0.5rem' }} alt="Zottola Fab Logo" />
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Shop Tracker</h2>
-            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '4px 0 0' }}>
-              {new Date().toLocaleDateString()}
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem', borderBottom: '0.5px solid var(--color-border-tertiary)', overflowX: 'auto' }}>
-            {['track', 'summary', 'admin', 'settings'].map(v => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  padding: '8px 0',
-                  borderBottom: view === v ? '2px solid var(--color-text-primary)' : 'none',
-                  fontSize: '13px',
-                  fontWeight: view === v ? 500 : 400,
-                  color: view === v ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {view === 'track' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px', fontWeight: 500 }}>
-                    Who is working?
-                  </label>
-                  <select
-                    value={emp}
-                    onChange={(e) => setEmp(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      fontSize: '16px',
-                      border: '0.5px solid var(--color-border-secondary)',
-                      borderRadius: 'var(--border-radius-md)',
-                      background: 'var(--color-background-primary)'
-                    }}
-                  >
-                    {defaultConfig.employees.map(e => (
-                      <option key={e.name} value={e.name}>{e.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px', fontWeight: 500 }}>
-                    Current project
-                  </label>
-                  <select
-                    value={proj}
-                    onChange={(e) => setProj(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      fontSize: '16px',
-                      border: '0.5px solid var(--color-border-secondary)',
-                      borderRadius: 'var(--border-radius-md)',
-                      background: 'var(--color-background-primary)'
-                    }}
-                  >
-                    {projects.map(p => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px', fontWeight: 500 }}>
-                    Work type
-                  </label>
-                  <select
-                    value={workType}
-                    onChange={(e) => setWorkType(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      fontSize: '16px',
-                      border: '0.5px solid var(--color-border-secondary)',
-                      borderRadius: 'var(--border-radius-md)',
-                      background: 'var(--color-background-primary)'
-                    }}
-                  >
-                    {workTypes.map(w => (
-                      <option key={w} value={w}>{w}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px', fontWeight: 500 }}>
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Optional"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      fontSize: '16px',
-                      border: '0.5px solid var(--color-border-secondary)',
-                      borderRadius: 'var(--border-radius-md)',
-                      background: 'var(--color-background-primary)'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '12px', fontWeight: 500 }}>
-                  Quick Adjustment
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px' }}>
-                  {types.map(t => (
-                    <div key={t} style={{ display: 'flex', gap: '6px' }}>
-                      <button
-                        onClick={() => addHours(emp, proj, t, workType, category, 0.5)}
-                        style={{
-                          flex: 1,
-                          padding: '12px 8px',
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          border: '0.5px solid var(--color-border-secondary)',
-                          background: 'var(--color-background-primary)',
-                          borderRadius: 'var(--border-radius-md)',
-                          cursor: 'pointer',
-                          minHeight: '44px'
-                        }}
-                      >
-                        +0.5h {t}
-                      </button>
-                      <button
-                        onClick={() => addHours(emp, proj, t, workType, category, 1)}
-                        style={{
-                          flex: 1,
-                          padding: '12px 8px',
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          border: '0.5px solid var(--color-border-secondary)',
-                          background: 'var(--color-background-primary)',
-                          borderRadius: 'var(--border-radius-md)',
-                          cursor: 'pointer',
-                          minHeight: '44px'
-                        }}
-                      >
-                        +1h
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '12px 0 8px' }}>
-                  Manual adjustment
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  {types.map(t => (
-                    <div key={t}>
-                      <label style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-                        {t}
-                      </label>
-                      <input
-                        type="number"
-                        step="0.25"
-                        min="0"
-                        value={data[key(emp, proj, t, workType, category)] || 0}
-                        onChange={(e) => {
-                          const newVal = parseFloat(e.target.value) || 0;
-                          const curVal = data[key(emp, proj, t, workType, category)] || 0;
-                          addHours(emp, proj, t, workType, category, newVal - curVal);
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          fontSize: '14px',
-                          border: '0.5px solid var(--color-border-secondary)',
-                          borderRadius: 'var(--border-radius-md)',
-                          background: 'var(--color-background-primary)',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background: 'var(--color-background-secondary)', padding: '1rem', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)' }}>
-                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 8px', textTransform: 'uppercase' }}>
-                  {proj} - {workType} {category && `- ${category}`}
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  {types.map(t => (
-                    <div key={t} style={{ background: 'var(--color-background-primary)', padding: '12px', borderRadius: 'var(--border-radius-md)', textAlign: 'center', border: '0.5px solid var(--color-border-tertiary)' }}>
-                      <p style={{ fontSize: '10px', color: 'var(--color-text-secondary)', margin: '0 0 6px', fontWeight: 500 }}>{t}</p>
-                      <p style={{ fontSize: '18px', fontWeight: 500, margin: 0 }}>
-                        {(data[key(emp, proj, t, workType, category)] || 0).toFixed(1)}h
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={exportCSV}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  border: '0.5px solid var(--color-border-secondary)',
-                  background: 'var(--color-background-primary)',
-                  borderRadius: 'var(--border-radius-md)',
-                  cursor: 'pointer',
-                  minHeight: '44px'
-                }}
-              >
-                Export
-              </button>
-            </div>
-          )}
-
-          {view === 'summary' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px', fontWeight: 500 }}>
-                  View for
-                </label>
-                <select
-                  value={emp}
-                  onChange={(e) => setEmp(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    fontSize: '16px',
-                    border: '0.5px solid var(--color-border-secondary)',
-                    borderRadius: 'var(--border-radius-md)',
-                    background: 'var(--color-background-primary)'
-                  }}
-                >
-                  {defaultConfig.employees.map(e => (
-                    <option key={e.name} value={e.name}>{e.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {projects.map(p => {
-                  const pTotals = getProjectTotals(emp, p);
-                  if (pTotals === 0) return null;
-                  
-                  return (
-                    <div key={p} style={{ background: 'var(--color-background-secondary)', padding: '12px', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)' }}>
-                      <p style={{ fontSize: '13px', fontWeight: 500, margin: '0 0 12px' }}>{p}</p>
-                      
-                      {workTypes.map(w => {
-                        const wTotals = getWorkTypeTotals(emp, p, w, '');
-                        if (wTotals === 0) return null;
-                        
-                        return (
-                          <div key={w} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
-                            <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: '0 0 6px', fontWeight: 500 }}>{w}</p>
-                            <p style={{ fontSize: '14px', fontWeight: 500 }}>{wTotals.toFixed(1)}h</p>
-                          </div>
-                        );
-                      })}
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 500, paddingTop: '8px' }}>
-                        <span>Project total</span>
-                        <span>{pTotals.toFixed(1)}h</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={exportCSV}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  border: '0.5px solid var(--color-border-secondary)',
-                  background: 'var(--color-background-primary)',
-                  borderRadius: 'var(--border-radius-md)',
-                  cursor: 'pointer',
-                  minHeight: '44px'
-                }}
-              >
-                Export
-              </button>
-            </div>
-          )}
-
-          {view === 'admin' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ background: 'var(--color-background-info)', padding: '12px', borderRadius: 'var(--border-radius-md)', fontSize: '13px', color: 'var(--color-text-info)' }}>
-                <p style={{ margin: '0 0 8px', fontWeight: 500 }}>Manage Projects</p>
-                <p style={{ margin: 0 }}>Current projects: {projects.length}</p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="New project name"
-                  value={newProject}
-                  onChange={(e) => setNewProject(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addProject()}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    fontSize: '14px',
-                    border: '0.5px solid var(--color-border-secondary)',
-                    borderRadius: 'var(--border-radius-md)',
-                    background: 'var(--color-background-primary)'
-                  }}
-                />
-                <button
-                  onClick={addProject}
-                  style={{
-                    padding: '10px 16px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    border: '0.5px solid var(--color-border-secondary)',
-                    background: 'var(--color-background-primary)',
-                    borderRadius: 'var(--border-radius-md)',
-                    cursor: 'pointer',
-                    minHeight: '44px'
-                  }}
-                >
-                  Add
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                {projects.map(p => (
-                  <div key={p} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'var(--color-background-secondary)', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)', fontSize: '13px' }}>
-                    <span>{p}</span>
-                    <button
-                      onClick={() => deleteProject(p)}
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        border: '0.5px solid var(--color-border-warning)',
-                        background: 'transparent',
-                        color: 'var(--color-text-warning)',
-                        borderRadius: 'var(--border-radius-md)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={resetProjects}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  border: '0.5px solid var(--color-border-secondary)',
-                  background: 'var(--color-background-primary)',
-                  borderRadius: 'var(--border-radius-md)',
-                  cursor: 'pointer',
-                  minHeight: '44px'
-                }}
-              >
-                Reset projects to defaults
-              </button>
-
-              <div style={{ background: 'var(--color-background-info)', padding: '12px', borderRadius: 'var(--border-radius-md)', fontSize: '13px', color: 'var(--color-text-info)', marginTop: '1rem' }}>
-                <p style={{ margin: '0 0 8px', fontWeight: 500 }}>Manage Work Types</p>
-                <p style={{ margin: 0 }}>Current types: {workTypes.length}</p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="New work type"
-                  value={newWorkType}
-                  onChange={(e) => setNewWorkType(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addWorkType()}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    fontSize: '14px',
-                    border: '0.5px solid var(--color-border-secondary)',
-                    borderRadius: 'var(--border-radius-md)',
-                    background: 'var(--color-background-primary)'
-                  }}
-                />
-                <button
-                  onClick={addWorkType}
-                  style={{
-                    padding: '10px 16px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    border: '0.5px solid var(--color-border-secondary)',
-                    background: 'var(--color-background-primary)',
-                    borderRadius: 'var(--border-radius-md)',
-                    cursor: 'pointer',
-                    minHeight: '44px'
-                  }}
-                >
-                  Add
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                {workTypes.map(w => (
-                  <div key={w} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'var(--color-background-secondary)', borderRadius: 'var(--border-radius-md)', border: '0.5px solid var(--color-border-tertiary)', fontSize: '13px' }}>
-                    <span>{w}</span>
-                    <button
-                      onClick={() => deleteWorkType(w)}
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        border: '0.5px solid var(--color-border-warning)',
-                        background: 'transparent',
-                        color: 'var(--color-text-warning)',
-                        borderRadius: 'var(--border-radius-md)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={resetWorkTypes}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  border: '0.5px solid var(--color-border-secondary)',
-                  background: 'var(--color-background-primary)',
-                  borderRadius: 'var(--border-radius-md)',
-                  cursor: 'pointer',
-                  minHeight: '44px'
-                }}
-              >
-                Reset work types to defaults
-              </button>
-            </div>
-          )}
-
-          {view === 'settings' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ background: 'var(--color-background-info)', padding: '12px', borderRadius: 'var(--border-radius-md)', fontSize: '13px', color: 'var(--color-text-info)' }}>
-                <p style={{ margin: '0 0 8px', fontWeight: 500 }}>App Status</p>
-                <p style={{ margin: '0 0 4px' }}>Employees: {defaultConfig.employees.length}</p>
-                <p style={{ margin: '0 0 4px' }}>Projects: {projects.length}</p>
-                <p style={{ margin: 0 }}>Work Types: {workTypes.length}</p>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (confirm('Clear today data?')) {
-                    localStorage.removeItem(storageKey);
-                    setData({});
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  border: '0.5px solid var(--color-border-warning)',
-                  background: 'transparent',
-                  color: 'var(--color-text-warning)',
-                  borderRadius: 'var(--border-radius-md)',
-                  cursor: 'pointer',
-                  minHeight: '44px'
-                }}
-              >
-                Clear today data
-              </button>
-            </div>
-          )}
+    <div id="track" class="tab-content active">
+      <div class="grid-2">
+        <div>
+          <label>Who is working?</label>
+          <select id="emp" onchange="saveState()">
+            <option>Fred</option>
+            <option>Jim</option>
+            <option>Laura</option>
+            <option>Mark</option>
+            <option>Jeff</option>
+            <option>Rich</option>
+            <option>Cody</option>
+            <option>Darin</option>
+            <option>Kate</option>
+            <option>Tony</option>
+          </select>
         </div>
-      );
+        <div>
+          <label>Current project</label>
+          <select id="proj" onchange="saveState()"></select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label>Work type</label>
+          <select id="workType" onchange="saveState()"></select>
+        </div>
+        <div>
+          <label>Category</label>
+          <input type="text" id="category" placeholder="Optional" onchange="saveState()">
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <p style="font-size: 13px; color: #666; margin-bottom: 12px; font-weight: 500;">Quick Adjustment</p>
+        <div class="grid-4" id="quickButtons"></div>
+
+        <p style="font-size: 12px; color: #666; margin: 12px 0 8px;">Manual adjustment</p>
+        <div class="grid-4" id="manualInputs"></div>
+      </div>
+
+      <div class="summary-box" style="margin-top: 1.5rem;">
+        <div class="summary-title" id="summaryTitle"></div>
+        <div class="hours-grid" id="summaryHours"></div>
+      </div>
+
+      <button onclick="exportCSV()" style="width: 100%; margin-top: 1rem;">Export</button>
+    </div>
+
+    <div id="summary" class="tab-content">
+      <div>
+        <label>View for</label>
+        <select id="summaryEmp" onchange="updateSummaryView()"></select>
+      </div>
+      <div id="summaryContent" style="margin-top: 1rem;"></div>
+      <button onclick="exportCSV()" style="width: 100%; margin-top: 1rem;">Export</button>
+    </div>
+
+    <div id="admin" class="tab-content">
+      <div class="info-box">Manage Projects<br>Current: <span id="projectCount">0</span></div>
+      <div style="display: flex; gap: 8px; margin-bottom: 1rem;">
+        <input type="text" id="newProjectInput" placeholder="New project name">
+        <button onclick="addProject()">Add</button>
+      </div>
+      <div class="project-list" id="projectList"></div>
+      <button onclick="resetProjects()" style="width: 100%; margin-top: 1rem;">Reset projects to defaults</button>
+
+      <div class="info-box" style="margin-top: 1rem;">Manage Work Types<br>Current: <span id="workTypeCount">0</span></div>
+      <div style="display: flex; gap: 8px; margin-bottom: 1rem;">
+        <input type="text" id="newWorkTypeInput" placeholder="New work type">
+        <button onclick="addWorkType()">Add</button>
+      </div>
+      <div class="project-list" id="workTypeList"></div>
+      <button onclick="resetWorkTypes()" style="width: 100%; margin-top: 1rem;">Reset work types to defaults</button>
+    </div>
+
+    <div id="settings" class="tab-content">
+      <div class="info-box">
+        App Status<br>
+        Employees: 10<br>
+        Projects: <span id="settingsProjects">0</span><br>
+        Work Types: <span id="settingsWorkTypes">0</span>
+      </div>
+      <button onclick="clearTodayData()" class="warning-btn" style="width: 100%;">Clear today data</button>
+    </div>
+  </div>
+
+  <script>
+    const defaultProjects = ['100 Industry Drive Hazelwood','28th Street Bridge','Alpine Lodge','BBL','Cecil Township','Crile','Daloia Residence','GSL','Gardian','General','Hickory Rail','Hosch','House Josh Rail','House Rail','Innovative','Jadhav','Jendoco','Leetsdale','MA Dunn Construction','Manthy','Miike Wertz','Minerd','Minerd 188571-1','Minerd 192258','Minerd 195298','Noble Residence','Other','Shop Work'];
+    const defaultWorkTypes = ['Beams','Plates','Miscellaneous'];
+    const types = ['Office','Shop','Onsite','Travel'];
+    const today = new Date().toISOString().split('T')[0];
+    const storageKey = `zottola_hours_${today}`;
+
+    let projects = JSON.parse(localStorage.getItem('zottola_projects')) || defaultProjects;
+    let workTypes = JSON.parse(localStorage.getItem('zottola_workTypes')) || defaultWorkTypes;
+    let data = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+    function init() {
+      document.getElementById('todayDate').textContent = new Date().toLocaleDateString();
+      renderSelects();
+      renderQuickButtons();
+      renderManualInputs();
+      updateSummary();
+      updateProjectList();
+      updateWorkTypeList();
+      loadState();
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<ShopTracker />);
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+      updateSummary();
+    }
+
+    function loadState() {
+      const emp = localStorage.getItem('zottola_emp');
+      const proj = localStorage.getItem('zottola_proj');
+      const workType = localStorage.getItem('zottola_workType');
+      if (emp) document.getElementById('emp').value = emp;
+      if (proj) document.getElementById('proj').value = proj;
+      if (workType) document.getElementById('workType').value = workType;
+    }
+
+    function renderSelects() {
+      const projSelect = document.getElementById('proj');
+      const workSelect = document.getElementById('workType');
+      const summaryEmpSelect = document.getElementById('summaryEmp');
+
+      projSelect.innerHTML = projects.map(p => `<option>${p}</option>`).join('');
+      workSelect.innerHTML = workTypes.map(w => `<option>${w}</option>`).join('');
+      summaryEmpSelect.innerHTML = ['Fred','Jim','Laura','Mark','Jeff','Rich','Cody','Darin','Kate','Tony'].map(e => `<option>${e}</option>`).join('');
+    }
+
+    function renderQuickButtons() {
+      const btn = document.getElementById('quickButtons');
+      btn.innerHTML = types.map(t => `
+        <div style="display: flex; gap: 6px;">
+          <button onclick="addHours('${t}', 0.5)" style="flex: 1;">+0.5h ${t}</button>
+          <button onclick="addHours('${t}', 1)" style="flex: 1;">+1h</button>
+        </div>
+      `).join('');
+    }
+
+    function renderManualInputs() {
+      const inp = document.getElementById('manualInputs');
+      inp.innerHTML = types.map(t => `
+        <div>
+          <label>${t}</label>
+          <input type="number" step="0.25" min="0" value="${getHours(t)}" onchange="setHours('${t}', this.value)">
+        </div>
+      `).join('');
+    }
+
+    function getKey(t, c = '') {
+      const emp = document.getElementById('emp').value;
+      const proj = document.getElementById('proj').value;
+      const wt = document.getElementById('workType').value;
+      return `${emp}|${proj}|${t}|${wt}|${c}`;
+    }
+
+    function getHours(t) {
+      return data[getKey(t)] || 0;
+    }
+
+    function addHours(t, n) {
+      const k = getKey(t);
+      data[k] = (data[k] || 0) + n;
+      saveState();
+      renderManualInputs();
+    }
+
+    function setHours(t, v) {
+      const k = getKey(t);
+      data[k] = Math.max(0, parseFloat(v) || 0);
+      saveState();
+      renderManualInputs();
+    }
+
+    function updateSummary() {
+      const emp = document.getElementById('emp').value;
+      const proj = document.getElementById('proj').value;
+      const wt = document.getElementById('workType').value;
+      const cat = document.getElementById('category').value;
+      
+      document.getElementById('summaryTitle').textContent = `${proj} - ${wt}${cat ? ' - ' + cat : ''}`.toUpperCase();
+      
+      const hg = document.getElementById('summaryHours');
+      hg.innerHTML = types.map(t => {
+        const hrs = data[getKey(t)] || 0;
+        return `<div class="hour-box"><div class="hour-label">${t}</div><div class="hour-value">${hrs.toFixed(1)}h</div></div>`;
+      }).join('');
+
+      localStorage.setItem('zottola_emp', emp);
+      localStorage.setItem('zottola_proj', proj);
+      localStorage.setItem('zottola_workType', wt);
+    }
+
+    function updateSummaryView() {
+      const emp = document.getElementById('summaryEmp').value;
+      const con = document.getElementById('summaryContent');
+      con.innerHTML = '';
+      
+      projects.forEach(p => {
+        let pTotal = 0;
+        workTypes.forEach(w => {
+          types.forEach(t => {
+            pTotal += data[`${emp}|${p}|${t}|${w}|`] || 0;
+          });
+        });
+        if (pTotal === 0) return;
+        
+        let html = `<div class="summary-box"><p style="margin: 0 0 12px; font-weight: 500;">${p}</p>`;
+        workTypes.forEach(w => {
+          let wTotal = 0;
+          types.forEach(t => {
+            wTotal += data[`${emp}|${p}|${t}|${w}|`] || 0;
+          });
+          if (wTotal > 0) {
+            html += `<div style="margin-bottom: 12px;"><p style="font-size: 11px; color: #999; margin: 0 0 6px;">${w}</p><p style="margin: 0; font-weight: 500;">${wTotal.toFixed(1)}h</p></div>`;
+          }
+        });
+        html += `<div style="border-top: 1px solid #ddd; padding-top: 8px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 500;"><span>Project total</span><span>${pTotal.toFixed(1)}h</span></div></div>`;
+        con.innerHTML += html;
+      });
+    }
+
+    function exportCSV() {
+      let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Onsite,Travel,Total Hours\n';
+      const employees = ['Fred','Jim','Laura','Mark','Jeff','Rich','Cody','Darin','Kate','Tony'];
+      
+      employees.forEach(e => {
+        projects.forEach(p => {
+          workTypes.forEach(w => {
+            let vals = {Office: 0, Shop: 0, Onsite: 0, Travel: 0};
+            types.forEach(t => {
+              vals[t] = data[`${e}|${p}|${t}|${w}|`] || 0;
+            });
+            let total = Object.values(vals).reduce((a,b) => a+b, 0);
+            if (total > 0) {
+              csv += `${today},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
+            }
+          });
+        });
+      });
+      
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `zottola_hours_${today}.csv`;
+      a.click();
+    }
+
+    function addProject() {
+      const inp = document.getElementById('newProjectInput');
+      if (inp.value.trim() && !projects.includes(inp.value.trim())) {
+        projects.push(inp.value.trim());
+        localStorage.setItem('zottola_projects', JSON.stringify(projects));
+        inp.value = '';
+        renderSelects();
+        updateProjectList();
+      }
+    }
+
+    function deleteProject(p) {
+      if (confirm(`Delete "${p}"?`)) {
+        projects = projects.filter(x => x !== p);
+        localStorage.setItem('zottola_projects', JSON.stringify(projects));
+        renderSelects();
+        updateProjectList();
+      }
+    }
+
+    function resetProjects() {
+      if (confirm('Reset to default 28 projects?')) {
+        projects = defaultProjects;
+        localStorage.setItem('zottola_projects', JSON.stringify(projects));
+        renderSelects();
+        updateProjectList();
+      }
+    }
+
+    function addWorkType() {
+      const inp = document.getElementById('newWorkTypeInput');
+      if (inp.value.trim() && !workTypes.includes(inp.value.trim())) {
+        workTypes.push(inp.value.trim());
+        localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
+        inp.value = '';
+        renderSelects();
+        updateWorkTypeList();
+      }
+    }
+
+    function deleteWorkType(w) {
+      if (confirm(`Delete "${w}"?`)) {
+        workTypes = workTypes.filter(x => x !== w);
+        localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
+        renderSelects();
+        updateWorkTypeList();
+      }
+    }
+
+    function resetWorkTypes() {
+      if (confirm('Reset to default work types?')) {
+        workTypes = defaultWorkTypes;
+        localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
+        renderSelects();
+        updateWorkTypeList();
+      }
+    }
+
+    function updateProjectList() {
+      const list = document.getElementById('projectList');
+      list.innerHTML = projects.map(p => `<div class="project-item"><span>${p}</span><button class="delete-btn" onclick="deleteProject('${p}')">Delete</button></div>`).join('');
+      document.getElementById('projectCount').textContent = projects.length;
+      document.getElementById('settingsProjects').textContent = projects.length;
+    }
+
+    function updateWorkTypeList() {
+      const list = document.getElementById('workTypeList');
+      list.innerHTML = workTypes.map(w => `<div class="project-item"><span>${w}</span><button class="delete-btn" onclick="deleteWorkType('${w}')">Delete</button></div>`).join('');
+      document.getElementById('workTypeCount').textContent = workTypes.length;
+      document.getElementById('settingsWorkTypes').textContent = workTypes.length;
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      event.target.classList.add('active');
+      
+      if (tab === 'summary') updateSummaryView();
+    }
+
+    function clearTodayData() {
+      if (confirm('Clear today data?')) {
+        localStorage.removeItem(storageKey);
+        data = {};
+        renderManualInputs();
+        updateSummary();
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
