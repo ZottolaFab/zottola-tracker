@@ -85,7 +85,7 @@ button:hover { background: #444; }
 </div>
 <div id="track" class="tab-content active">
 <div class="grid-2">
-<div><label>Who is working?</label><select id="emp" onchange="refreshTrack()"></select></div>
+<div><label>Who is working?</label><select id="emp" onchange="changeEmployee()"></select></div>
 <div><label>Current project</label><select id="proj" onchange="refreshTrack()"></select></div>
 </div>
 <div class="grid-2">
@@ -156,6 +156,7 @@ function getDateRange(startDate){const dates=[];for(let i=0;i<6;i++){const d=new
 function init(){renderSelects();renderQuickButtons();renderManualInputs();updateProjectList();updateWorkTypeList();loadState();setCurrentDate(new Date().toISOString().split('T')[0]);}
 function saveState(){saveData();updateSummary();}
 function refreshTrack(){saveState();renderManualInputs();}
+function changeEmployee(){document.getElementById('category').value='';refreshTrack();}
 function onCategoryChange(){const c=document.getElementById('category');c.value=cleanField(c.value);renderManualInputs();updateSummary();}
 function loadState(){const emp=localStorage.getItem('zottola_emp');const proj=localStorage.getItem('zottola_proj');const workType=localStorage.getItem('zottola_workType');if(emp&&employees.includes(emp))document.getElementById('emp').value=emp;if(proj&&projects.includes(proj))document.getElementById('proj').value=proj;if(workType&&workTypes.includes(workType))document.getElementById('workType').value=workType;}
 function renderSelects(){
