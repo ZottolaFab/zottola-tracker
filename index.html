@@ -13,27 +13,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .date-section { margin-bottom: 1.5rem; }
 .date-controls { display: flex; gap: 12px; align-items: center; justify-content: center; }
 .date-display { font-size: 14px; color: #666; font-weight: 500; min-width: 180px; text-align: center; }
-.date-controls input[type="date"] { padding: 10px 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+.date-controls input[type="date"] { padding: 10px 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; }
 .tabs-wrapper { margin-bottom: 1.5rem; }
 .tabs { display: flex; gap: 12px; border-bottom: 2px solid #e0e0e0; overflow-x: auto; }
-.tab-btn { border: none; background: none; padding: 12px 0; font-size: 14px; cursor: pointer; color: #999; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
-.tab-btn:hover { color: #333; }
+.tab-btn { border: none; background: none; padding: 12px 0; font-size: 14px; cursor: pointer; color: #999; white-space: nowrap; border-bottom: 3px solid transparent; }
 .tab-btn.active { color: #333; border-bottom-color: #333; font-weight: 600; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
-label { display: block; font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+label { display: block; font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
 select, input[type="text"], input[type="number"] { width: 100%; padding: 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; background: white; }
-select:focus, input:focus { outline: none; border-color: #333; box-shadow: 0 0 0 2px rgba(51,51,51,0.1); }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
 .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-button { padding: 12px 16px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; min-height: 44px; transition: all 0.2s; }
-button:hover { background: #f5f5f5; border-color: #999; }
+button { padding: 12px 16px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; }
+button:hover { background: #f5f5f5; }
 button.btn-green { background: #4CAF50; color: white; border: none; }
-button.btn-green:hover { background: #45a049; }
 button.btn-blue { background: #2196F3; color: white; border: none; }
-button.btn-blue:hover { background: #0b7dda; }
 button.btn-orange { background: #FF9800; color: white; border: none; }
-button.btn-orange:hover { background: #e68900; }
 .section { margin-bottom: 1.5rem; }
 .section-title { font-size: 13px; color: #999; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; }
 .summary-box { background: #f9f9f9; padding: 1rem; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 1rem; }
@@ -41,38 +36,20 @@ button.btn-orange:hover { background: #e68900; }
 .hours-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .hour-box { background: white; padding: 14px; border-radius: 4px; border: 1px solid #e0e0e0; text-align: center; }
 .hour-label { font-size: 11px; color: #999; margin-bottom: 8px; text-transform: uppercase; }
-.hour-value { font-size: 20px; font-weight: 600; color: #333; }
+.hour-value { font-size: 20px; font-weight: 600; }
 .info-box { background: #e3f2fd; padding: 12px; border-radius: 4px; font-size: 13px; color: #1565c0; margin-bottom: 1rem; }
 .project-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; }
-.project-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0; font-size: 13px; }
+.project-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0; font-size: 13px; }
 .delete-btn { padding: 6px 12px; font-size: 12px; border: 1px solid #f44336; background: transparent; color: #f44336; }
-.delete-btn:hover { background: #fde0de; }
 .week-header { font-size: 14px; font-weight: 600; margin: 1rem 0; padding: 1rem; background: #f0f0f0; border-radius: 4px; }
 .day-box { background: #f9f9f9; padding: 1rem; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 1rem; }
-.day-header { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #333; }
+.day-header { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
 .project-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #e0e0e0; }
-.project-row:last-child { border-bottom: none; }
 .day-total { padding: 8px 0; margin-top: 8px; border-top: 2px solid #ccc; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; }
 .week-total { background: #e3f2fd; padding: 1rem; border-radius: 4px; font-size: 14px; font-weight: 600; margin-top: 1rem; display: flex; justify-content: space-between; color: #1565c0; }
 .export-section { background: #f0f7ff; padding: 1.5rem; border-radius: 4px; border: 1px solid #b3d9ff; }
 .export-buttons { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 1.5rem; }
 @media (min-width: 640px) { .export-buttons { grid-template-columns: repeat(3, 1fr); } }
-@media (prefers-color-scheme: dark) {
-body { background: #1a1a1a; }
-.container { background: #2a2a2a; color: #f0f0f0; }
-select, input[type="text"], input[type="number"], input[type="date"] { background: #333; color: #f0f0f0; border-color: #444; }
-button { background: #333; color: #f0f0f0; border-color: #444; }
-button:hover { background: #444; }
-.summary-box { background: #333; border-color: #444; }
-.hour-box { background: #2a2a2a; border-color: #444; }
-.project-item { background: #333; border-color: #444; }
-.info-box { background: #1a3a52; color: #90caf9; }
-.day-box { background: #333; border-color: #444; }
-.project-row { border-bottom-color: #444; }
-.day-total { border-top-color: #555; }
-.week-header { background: #444; }
-.export-section { background: #1a3a52; border-color: #2a5a8a; }
-}
 </style>
 </head>
 <body>
@@ -101,9 +78,10 @@ button:hover { background: #444; }
 
 <div id="track" class="tab-content active">
 <div class="grid-2">
-<div><label>Who is working?</label><select id="emp" onchange="saveState()"><option>Fred</option><option>Jim</option><option>Laura</option><option>Mark</option><option>Jeff</option><option>Rich</option><option>Cody</option><option>Darin</option><option>Kate</option><option>Tony</option></select></div>
+<div><label>Who is working?</label><select id="emp" onchange="onEmployeeChange()"><option>Fred</option><option>Jim</option><option>Laura</option><option>Mark</option><option>Jeff</option><option>Rich</option><option>Cody</option><option>Darin</option><option>Kate</option><option>Tony</option></select></div>
 <div><label>Current project</label><select id="proj" onchange="saveState()"></select></div>
 </div>
+
 <div class="grid-2">
 <div><label>Work type</label><select id="workType" onchange="saveState()"></select></div>
 <div><label>Category (optional)</label><input type="text" id="category" placeholder="e.g., Rework, Rush" onchange="saveState()"></div>
@@ -120,7 +98,7 @@ button:hover { background: #444; }
 </div>
 
 <div class="summary-box">
-<div class="summary-title" id="summaryTitle"></div>
+<div class="summary-title" id="summaryTitle">Select employee and project</div>
 <div class="hours-grid" id="summaryHours"></div>
 </div>
 
@@ -175,15 +153,57 @@ button:hover { background: #444; }
 </div>
 </div>
 
+<div id="restoreConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; flex: 1; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px; text-align: center;">
+    <h3 style="margin: 0 0 1rem; color: #333;">Restore Backup?</h3>
+    <p id="restoreConfirmText" style="margin: 0 0 1.5rem; white-space: pre-wrap; color: #666; text-align: left;"></p>
+    <div style="display: flex; gap: 12px;">
+      <button onclick="confirmRestore()" style="flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">CONFIRM</button>
+      <button onclick="cancelRestore()" style="flex: 1; padding: 12px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">CANCEL</button>
+    </div>
+  </div>
+</div>
+
 <div id="settings" class="tab-content">
 <div class="info-box">App Status<br><br>Employees: 10<br>Projects: <span id="settingsProjects">0</span><br>Work Types: <span id="settingsWorkTypes">0</span></div>
+
+<div class="section" style="margin-top: 2rem;">
+<div class="section-title">Data Backup</div>
+<div id="backupStatus"></div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<button class="btn-blue" onclick="downloadBackup()" style="flex: 1; min-width: 200px;">Download Backup</button>
+<button class="btn-green" onclick="restoreFromBackup()" style="flex: 1; min-width: 200px;">Restore from Backup</button>
+</div>
+<p style="font-size: 12px; color: #999; margin-top: 1rem; line-height: 1.5;">
+<strong>How it works:</strong><br>
+• Auto-backs up every time you enter hours<br>
+• Daily backup at 5 PM<br>
+• Download backup and save to your computer<br>
+• Restore anytime if needed
+</p>
+</div>
 </div>
 </div>
 </div>
 
 <script>
 const defaultProjects = ['Estimate', 'Misc', 'Office', 'Off', 'Vacation', 'Holiday'];
-const defaultWorkTypes = ['Beams', 'Plates', 'Miscellaneous'];
+const defaultWorkTypes = [
+  'Admin inc Coordination, Material Purchasing, RFI & Web Meetings',
+  'Field Measure/Jobsite Visit',
+  'Delivery to & from (Galv/PC)',
+  'Delivery to Jobsite',
+  'Unload',
+  'Detail Material',
+  'Plate Processing',
+  'Beam Processing',
+  'Assembly & Welding',
+  'Paint',
+  'Load',
+  'Demo',
+  'Installation',
+  'Perimeter Safety Cable Install'
+];
 const types = ['Office', 'Shop', 'Onsite', 'Travel'];
 const employees = ['Fred', 'Jim', 'Laura', 'Mark', 'Jeff', 'Rich', 'Cody', 'Darin', 'Kate', 'Tony'];
 
@@ -194,7 +214,54 @@ let data = {};
 
 function getStorageKey(dateStr) { return `zottola_hours_${dateStr}`; }
 function loadDataForDate(dateStr) { data = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {}; }
-function saveData() { localStorage.setItem(getStorageKey(currentDate), JSON.stringify(data)); }
+function saveData() { 
+  localStorage.setItem(getStorageKey(currentDate), JSON.stringify(data));
+  backupData();
+  createDailyBackupIfNeeded();
+}
+
+function backupData() {
+  const timestamp = new Date().toISOString();
+  const allData = {};
+  for (let key in localStorage) {
+    if (key.startsWith('zottola_hours_')) {
+      allData[key] = localStorage.getItem(key);
+    }
+  }
+  const backup = {
+    timestamp: timestamp,
+    data: allData,
+    projectCount: projects.length,
+    workTypeCount: workTypes.length
+  };
+  localStorage.setItem('zottola_backup_latest', JSON.stringify(backup));
+  updateBackupDisplay();
+}
+
+function createDailyBackupIfNeeded() {
+  const now = new Date();
+  const hour = now.getHours();
+  const lastDailyBackup = localStorage.getItem('zottola_last_daily_backup');
+  const today = new Date().toISOString().split('T')[0];
+  
+  if (hour >= 17 && (!lastDailyBackup || !lastDailyBackup.startsWith(today))) {
+    const timestamp = new Date().toISOString();
+    const allData = {};
+    for (let key in localStorage) {
+      if (key.startsWith('zottola_hours_')) {
+        allData[key] = localStorage.getItem(key);
+      }
+    }
+    const backup = {
+      timestamp: timestamp,
+      data: allData,
+      projectCount: projects.length,
+      workTypeCount: workTypes.length
+    };
+    localStorage.setItem('zottola_backup_daily_' + today, JSON.stringify(backup));
+    localStorage.setItem('zottola_last_daily_backup', timestamp);
+  }
+}
 
 function setCurrentDate(dateStr) {
   currentDate = dateStr;
@@ -213,8 +280,15 @@ function updateDateDisplay() {
 }
 
 function jumpToDate() {
-  const dateInput = document.getElementById('dateInput').value;
-  if (dateInput) setCurrentDate(dateInput);
+  const val = document.getElementById('dateInput').value;
+  if (val) setCurrentDate(val);
+}
+
+function onEmployeeChange() {
+  document.getElementById('proj').selectedIndex = 0;
+  document.getElementById('workType').selectedIndex = 0;
+  document.getElementById('category').value = '';
+  saveState();
 }
 
 function getMondayOfWeek(dateStr) {
@@ -280,15 +354,22 @@ function init() {
   renderSelects();
   renderQuickButtons();
   renderManualInputs();
-  updateSummary();
   updateProjectList();
   updateWorkTypeList();
   loadState();
   setCurrentDate(new Date().toISOString().split('T')[0]);
   document.getElementById('weekDate').value = currentDate;
+  createDailyBackupIfNeeded();
+  updateBackupDisplay();
 }
 
-function saveState() { saveData(); updateSummary(); }
+function saveState() { 
+  saveData(); 
+  updateSummary();
+  localStorage.setItem('zottola_emp', document.getElementById('emp').value);
+  localStorage.setItem('zottola_proj', document.getElementById('proj').value);
+  localStorage.setItem('zottola_workType', document.getElementById('workType').value);
+}
 
 function loadState() {
   const emp = localStorage.getItem('zottola_emp');
@@ -300,15 +381,10 @@ function loadState() {
 }
 
 function renderSelects() {
-  const projSelect = document.getElementById('proj');
-  const workSelect = document.getElementById('workType');
-  const summaryEmpSelect = document.getElementById('summaryEmp');
-  const weekEmpSelect = document.getElementById('weekEmp');
-  
-  projSelect.innerHTML = projects.map(p => `<option>${p}</option>`).join('');
-  workSelect.innerHTML = workTypes.map(w => `<option>${w}</option>`).join('');
-  summaryEmpSelect.innerHTML = employees.map(e => `<option>${e}</option>`).join('');
-  weekEmpSelect.innerHTML = employees.map(e => `<option>${e}</option>`).join('');
+  document.getElementById('proj').innerHTML = '<option></option>' + projects.map(p => `<option>${p}</option>`).join('');
+  document.getElementById('workType').innerHTML = '<option></option>' + workTypes.map(w => `<option>${w}</option>`).join('');
+  document.getElementById('summaryEmp').innerHTML = employees.map(e => `<option>${e}</option>`).join('');
+  document.getElementById('weekEmp').innerHTML = employees.map(e => `<option>${e}</option>`).join('');
 }
 
 function renderQuickButtons() {
@@ -322,10 +398,7 @@ function renderManualInputs() {
 }
 
 function getKey(t) {
-  const emp = document.getElementById('emp').value;
-  const proj = document.getElementById('proj').value;
-  const wt = document.getElementById('workType').value;
-  return `${emp}|${proj}|${t}|${wt}|`;
+  return `${document.getElementById('emp').value}|${document.getElementById('proj').value}|${t}|${document.getElementById('workType').value}|`;
 }
 
 function getHours(t) { return data[getKey(t)] || 0; }
@@ -333,15 +406,17 @@ function getHours(t) { return data[getKey(t)] || 0; }
 function addHours(t, n) {
   const k = getKey(t);
   data[k] = (data[k] || 0) + n;
-  saveState();
+  saveData();
   renderManualInputs();
+  updateSummary();
 }
 
 function setHours(t, v) {
   const k = getKey(t);
   data[k] = Math.max(0, parseFloat(v) || 0);
-  saveState();
+  saveData();
   renderManualInputs();
+  updateSummary();
 }
 
 function updateSummary() {
@@ -353,13 +428,9 @@ function updateSummary() {
   document.getElementById('summaryTitle').textContent = `${proj} - ${wt}${cat ? ` - ${cat}` : ''}`.toUpperCase();
   const hg = document.getElementById('summaryHours');
   hg.innerHTML = types.map(t => {
-    const hrs = data[getKey(t)] || 0;
+    const hrs = getHours(t);
     return `<div class="hour-box"><div class="hour-label">${t}</div><div class="hour-value">${hrs.toFixed(2)}h</div></div>`;
   }).join('');
-  
-  localStorage.setItem('zottola_emp', emp);
-  localStorage.setItem('zottola_proj', proj);
-  localStorage.setItem('zottola_workType', wt);
 }
 
 function updateSummaryView() {
@@ -421,91 +492,163 @@ function exportCSV() {
 }
 
 function exportFullWeek() {
-  const dateStr = document.getElementById('weekDate').value;
-  const mondayDate = getMondayOfWeek(dateStr);
-  const weekDates = getDateRange(mondayDate);
-  let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
-  
-  weekDates.forEach(dateStr => {
-    const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-    employees.forEach(e => {
-      projects.forEach(p => {
-        workTypes.forEach(w => {
-          let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
-          types.forEach(t => {
-            vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
+  try {
+    const dateStr = document.getElementById('weekDate').value;
+    if (!dateStr) {
+      alert('Please select a date first.');
+      return;
+    }
+    
+    const mondayDate = getMondayOfWeek(dateStr);
+    const weekDates = getDateRange(mondayDate);
+    let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
+    
+    weekDates.forEach(dateStr => {
+      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
+      employees.forEach(e => {
+        projects.forEach(p => {
+          workTypes.forEach(w => {
+            let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
+            types.forEach(t => {
+              vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
+            });
+            let total = Object.values(vals).reduce((a, b) => a + b, 0);
+            if (total > 0) {
+              csv += `${dateStr},${e},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
+            }
           });
-          let total = Object.values(vals).reduce((a, b) => a + b, 0);
-          if (total > 0) {
-            csv += `${dateStr},${e},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
-          }
         });
       });
     });
-  });
-  downloadCSV(csv, `zottola_week_${mondayDate}.csv`);
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `zottola_week_${mondayDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert('✓ Full week exported!');
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('❌ Error: ' + e.message);
+  }
 }
 
 function exportPreviousWeek() {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  const prevWeekDate = d.toISOString().split('T')[0];
-  const mondayDate = getMondayOfWeek(prevWeekDate);
-  const weekDates = getDateRange(mondayDate);
-  let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
-  
-  weekDates.forEach(dateStr => {
-    const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-    employees.forEach(e => {
-      projects.forEach(p => {
-        workTypes.forEach(w => {
-          let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
-          types.forEach(t => {
-            vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
+  try {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    const prevWeekDate = d.toISOString().split('T')[0];
+    const mondayDate = getMondayOfWeek(prevWeekDate);
+    const weekDates = getDateRange(mondayDate);
+    let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
+    
+    weekDates.forEach(dateStr => {
+      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
+      employees.forEach(e => {
+        projects.forEach(p => {
+          workTypes.forEach(w => {
+            let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
+            types.forEach(t => {
+              vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
+            });
+            let total = Object.values(vals).reduce((a, b) => a + b, 0);
+            if (total > 0) {
+              csv += `${dateStr},${e},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
+            }
           });
-          let total = Object.values(vals).reduce((a, b) => a + b, 0);
-          if (total > 0) {
-            csv += `${dateStr},${e},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
-          }
         });
       });
     });
-  });
-  downloadCSV(csv, `zottola_week_${mondayDate}.csv`);
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `zottola_week_${mondayDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert('✓ Previous week exported!');
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('❌ Error: ' + e.message);
+  }
 }
 
 function exportWeeklySummary() {
-  const dateStr = document.getElementById('weekDate').value;
-  const mondayDate = getMondayOfWeek(dateStr);
-  const weekDates = getDateRange(mondayDate);
-  const d = new Date(mondayDate + 'T00:00:00');
-  const weekStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  
-  const empTotals = {}, projTotals = {};
-  weekDates.forEach(dateStr => {
-    const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-    employees.forEach(e => {
-      projects.forEach(p => {
-        workTypes.forEach(w => {
-          types.forEach(t => {
-            const hrs = dayData[`${e}|${p}|${t}|${w}|`] || 0;
-            empTotals[e] = (empTotals[e] || 0) + hrs;
-            projTotals[p] = (projTotals[p] || 0) + hrs;
+  try {
+    const dateStr = document.getElementById('weekDate').value;
+    if (!dateStr) {
+      alert('Please select a date first.');
+      return;
+    }
+    
+    const mondayDate = getMondayOfWeek(dateStr);
+    const weekDates = getDateRange(mondayDate);
+    const d = new Date(mondayDate + 'T00:00:00');
+    const weekStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    console.log('Exporting weekly summary for week:', weekStr);
+    console.log('Week dates:', weekDates);
+    
+    const empTotals = {}, projTotals = {};
+    
+    weekDates.forEach(dateStr => {
+      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
+      employees.forEach(e => {
+        projects.forEach(p => {
+          workTypes.forEach(w => {
+            types.forEach(t => {
+              const hrs = dayData[`${e}|${p}|${t}|${w}|`] || 0;
+              empTotals[e] = (empTotals[e] || 0) + hrs;
+              projTotals[p] = (projTotals[p] || 0) + hrs;
+            });
           });
         });
       });
     });
-  });
-  
-  let csv = `WEEKLY SUMMARY - Week of ${weekStr}\n\nEMPLOYEE TOTALS\nEmployee,Total Hours\n`;
-  employees.forEach(e => {
-    if (empTotals[e]) csv += `${e},${empTotals[e].toFixed(2)}\n`;
-  });
-  csv += `\nPROJECT TOTALS\nProject,Total Hours\n`;
-  projects.forEach(p => {
-    if (projTotals[p]) csv += `${p},${projTotals[p].toFixed(2)}\n`;
-  });
-  downloadCSV(csv, `zottola_summary_${mondayDate}.csv`);
+    
+    let csv = `WEEKLY SUMMARY - Week of ${weekStr}\n\nEMPLOYEE TOTALS\nEmployee,Total Hours\n`;
+    employees.forEach(e => {
+      if (empTotals[e] && empTotals[e] > 0) {
+        csv += `${e},${empTotals[e].toFixed(2)}\n`;
+      }
+    });
+    csv += `\nPROJECT TOTALS\nProject,Total Hours\n`;
+    projects.forEach(p => {
+      if (projTotals[p] && projTotals[p] > 0) {
+        csv += `${p},${projTotals[p].toFixed(2)}\n`;
+      }
+    });
+    
+    console.log('CSV generated:', csv);
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `zottola_summary_${mondayDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert('✓ Weekly summary exported!');
+    console.log('Export complete');
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('❌ Error exporting: ' + e.message);
+  }
 }
 
 function downloadCSV(csv, filename) {
@@ -538,11 +681,14 @@ function deleteProject(p) {
 }
 
 function resetProjects() {
-  if (confirm('Reset to default 6 projects?')) {
-    projects = defaultProjects;
+  if (confirm('Reset to default 6 projects?\n\n(Any custom projects you added will be deleted)')) {
+    localStorage.removeItem('zottola_projects');
+    projects = JSON.parse(JSON.stringify(defaultProjects));
     localStorage.setItem('zottola_projects', JSON.stringify(projects));
     renderSelects();
     updateProjectList();
+    alert('✓ Projects reset to defaults!\n\nNow showing: Estimate, Misc, Office, Off, Vacation, Holiday');
+    console.log('Reset complete. Projects:', projects);
   }
 }
 
@@ -567,11 +713,14 @@ function deleteWorkType(w) {
 }
 
 function resetWorkTypes() {
-  if (confirm('Reset to default work types?')) {
-    workTypes = defaultWorkTypes;
+  if (confirm('Reset to default 14 work types?')) {
+    localStorage.removeItem('zottola_workTypes');
+    workTypes = JSON.parse(JSON.stringify(defaultWorkTypes));
     localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
     renderSelects();
     updateWorkTypeList();
+    alert('✓ Work types reset to defaults!');
+    console.log('Reset complete. Work types:', workTypes);
   }
 }
 
@@ -580,6 +729,113 @@ function updateProjectList() {
   list.innerHTML = projects.map(p => `<div class="project-item"><span>${p}</span><button class="delete-btn" onclick="deleteProject('${p}')">Delete</button></div>`).join('');
   document.getElementById('projectCount').textContent = projects.length;
   document.getElementById('settingsProjects').textContent = projects.length;
+}
+
+function updateBackupDisplay() {
+  const backupElement = document.getElementById('backupStatus');
+  if (!backupElement) return;
+  
+  const backup = JSON.parse(localStorage.getItem('zottola_backup_latest')) || null;
+  if (backup) {
+    const d = new Date(backup.timestamp);
+    const timeStr = d.toLocaleString();
+    backupElement.innerHTML = `<div style="color: #4CAF50; font-weight: 600; margin-bottom: 1rem;">✓ Last backup: ${timeStr}</div>`;
+  } else {
+    backupElement.innerHTML = `<div style="color: #ff9800; font-weight: 600; margin-bottom: 1rem;">⚠ No backup yet. Data will auto-backup on next entry.</div>`;
+  }
+}
+
+function downloadBackup() {
+  const backupStr = localStorage.getItem('zottola_backup_latest');
+  if (!backupStr) {
+    alert('No backup available yet. Enter some data first.');
+    return;
+  }
+  
+  try {
+    const backup = JSON.parse(backupStr);
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `zottola_backup_${new Date().toISOString().split('T')[0]}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    alert('✓ Backup downloaded! Save it to your Google Drive.');
+  } catch (e) {
+    alert('Error downloading backup: ' + e.message);
+  }
+}
+
+let pendingRestore = null;
+
+function restoreFromBackup() {
+  try {
+    const backupStr = localStorage.getItem('zottola_backup_latest');
+    console.log('Step 1 - Backup string exists:', !!backupStr);
+    
+    if (!backupStr) {
+      alert('❌ No backup available to restore.');
+      return;
+    }
+    
+    const backup = JSON.parse(backupStr);
+    console.log('Step 2 - Backup parsed, records:', Object.keys(backup.data || {}).length);
+    
+    if (!backup.data || Object.keys(backup.data).length === 0) {
+      alert('❌ Backup is empty.');
+      return;
+    }
+    
+    pendingRestore = backup;
+    const backupDate = new Date(backup.timestamp).toLocaleString();
+    const dataCount = Object.keys(backup.data).length;
+    
+    // Show confirmation modal instead of dialog
+    document.getElementById('restoreConfirmModal').style.display = 'block';
+    document.getElementById('restoreConfirmText').textContent = 
+      `Backup Date: ${backupDate}\nRecords: ${dataCount}\n\nClick CONFIRM to restore all data.`;
+    
+    console.log('Step 3 - Confirmation modal shown');
+  } catch (e) {
+    console.error('Error:', e);
+    alert('❌ Error: ' + e.message);
+  }
+}
+
+function confirmRestore() {
+  if (!pendingRestore) return;
+  
+  try {
+    console.log('Step 4 - Confirming restore...');
+    Object.entries(pendingRestore.data).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+    
+    loadDataForDate(currentDate);
+    renderManualInputs();
+    updateSummary();
+    updateBackupDisplay();
+    
+    document.getElementById('restoreConfirmModal').style.display = 'none';
+    pendingRestore = null;
+    
+    alert('✓ Backup restored successfully!');
+    console.log('Step 5 - Restore complete');
+  } catch (e) {
+    console.error('Restore error:', e);
+    alert('❌ Error: ' + e.message);
+  }
+}
+
+function cancelRestore() {
+  document.getElementById('restoreConfirmModal').style.display = 'none';
+  pendingRestore = null;
+  console.log('Step - Restore cancelled');
 }
 
 function updateWorkTypeList() {
@@ -597,6 +853,7 @@ function switchTab(tab, event) {
   if (tab === 'export') updateWeekExportPreview();
   if (tab === 'week') updateWeekView();
   if (tab === 'summary') updateSummaryView();
+  if (tab === 'settings') updateBackupDisplay();
 }
 
 init();
