@@ -106,8 +106,9 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div id="week" class="tab-content">
-<label>View week for</label>
-<select id="weekEmp" onchange="updateWeekView()" style="margin-bottom: 1.5rem;"></select>
+<label>Select week starting date (Monday)</label>
+<input type="date" id="weekViewDate" onchange="updateWeekView()" style="margin-bottom: 1.5rem;">
+
 <div id="weekContent"></div>
 </div>
 
@@ -119,13 +120,18 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 
 <div id="export" class="tab-content">
 <div class="export-section">
+<h3 style="margin-bottom: 1rem;">Export All Data</h3>
+<p style="font-size: 13px; color: #666; margin-bottom: 1rem;">Download complete data dump of all tracked hours (CSV format)</p>
+<button class="btn-orange" onclick="exportAllData()" style="width: 100%; margin-bottom: 1.5rem;">Export All Data to CSV</button>
+</div>
+
+<div class="export-section">
 <h3 style="margin-bottom: 1rem;">Weekly Export</h3>
 <label>Select week starting date</label>
 <input type="date" id="weekDate" onchange="updateWeekExportPreview()" style="margin-bottom: 1rem;">
 <div id="weekExportInfo" style="font-size: 13px; color: #666; margin-bottom: 1.5rem;"></div>
 <div class="export-buttons">
 <button class="btn-green" onclick="exportFullWeek()">Export Full Week (Mon-Sat)</button>
-<button class="btn-blue" onclick="exportPreviousWeek()">Export Previous Week</button>
 <button class="btn-orange" onclick="exportWeeklySummary()">Weekly Summary</button>
 </div>
 </div>
@@ -233,7 +239,7 @@ const defaultWorkTypes = [
   'Installation',
   'Perimeter Safety Cable Install'
 ];
-const types = ['Office', 'Shop', 'Onsite', 'Travel'];
+const types = ['Office', 'Shop', 'Travel', 'Onsite'];
 const employees = ['Fred', 'Jim', 'Laura', 'Mark', 'Jeff', 'Rich', 'Cody', 'Darin', 'Kate', 'Tony'];
 
 let currentDate = new Date().toISOString().split('T')[0];
@@ -338,45 +344,53 @@ function getDateRange(startDate) {
 }
 
 function updateWeekView() {
-  const emp = document.getElementById('weekEmp').value;
-  const mondayDate = getMondayOfWeek(currentDate);
+  const dateStr = document.getElementById('weekViewDate').value || currentDate;
+  const mondayDate = getMondayOfWeek(dateStr);
   const weekDates = getDateRange(mondayDate);
   const d = new Date(mondayDate + 'T00:00:00');
   const weekStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   
-  let html = `<div class="week-header">${emp} - Week of ${weekStr}</div>`;
-  let weekTotalHours = 0;
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const empTotals = {};
   
-  weekDates.forEach((dateStr, idx) => {
+  // Calculate totals for each employee for the week
+  weekDates.forEach(dateStr => {
     const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-    const dayName = dayNames[idx];
-    const projectHours = {};
-    
-    projects.forEach(p => {
-      let pTotal = 0;
-      workTypes.forEach(w => {
-        types.forEach(t => {
-          pTotal += dayData[`${emp}|${p}|${t}|${w}|`] || 0;
+    employees.forEach(e => {
+      let empTotal = 0;
+      projects.forEach(p => {
+        workTypes.forEach(w => {
+          types.forEach(t => {
+            empTotal += dayData[`${e}|${p}|${t}|${w}|`] || 0;
+          });
         });
       });
-      if (pTotal > 0) projectHours[p] = pTotal;
+      if (empTotal > 0) {
+        empTotals[e] = (empTotals[e] || 0) + empTotal;
+      }
     });
-    
-    const dayTotal = Object.values(projectHours).reduce((a, b) => a + b, 0);
-    weekTotalHours += dayTotal;
-    
-    if (dayTotal > 0) {
-      html += `<div class="day-box"><div class="day-header">${dayName}</div>`;
-      Object.entries(projectHours).forEach(([proj, hrs]) => {
-        if (hrs > 0) html += `<div class="project-row"><span>${proj}</span><span>${hrs.toFixed(2)}h</span></div>`;
-      });
-      html += `<div class="day-total"><span>Day Total</span><span>${dayTotal.toFixed(2)}h</span></div></div>`;
-    }
   });
   
-  html += `<div class="week-total"><span>Week Total</span><span>${weekTotalHours.toFixed(2)}h</span></div>`;
+  // Build display
+  let html = `<div class="week-header">Week of ${weekStr}</div>`;
+  let grandTotal = 0;
+  
+  if (Object.keys(empTotals).length === 0) {
+    html += `<div style="padding: 1rem; text-align: center; color: #999;">No hours tracked this week</div>`;
+  } else {
+    html += `<div style="background: #f9f9f9; border-radius: 4px; padding: 0;">`;
+    employees.forEach(e => {
+      if (empTotals[e]) {
+        const hours = empTotals[e];
+        grandTotal += hours;
+        html += `<div style="display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e0e0e0;"><span style="font-weight: 500;">${e}</span><span style="font-weight: 600; color: #2196F3;">${hours.toFixed(2)}h</span></div>`;
+      }
+    });
+    html += `</div>`;
+    html += `<div class="week-total"><span>WEEK TOTAL</span><span>${grandTotal.toFixed(2)}h</span></div>`;
+  }
+  
   document.getElementById('weekContent').innerHTML = html;
+  document.getElementById('weekViewDate').value = dateStr;
 }
 
 function init() {
@@ -390,6 +404,7 @@ function init() {
   document.getElementById('weekDate').value = currentDate;
   createDailyBackupIfNeeded();
   updateBackupDisplay();
+  updateSummaryView();
 }
 
 function saveState() { 
@@ -413,7 +428,6 @@ function renderSelects() {
   document.getElementById('proj').innerHTML = '<option></option>' + projects.map(p => `<option>${p}</option>`).join('');
   document.getElementById('workType').innerHTML = '<option></option>' + workTypes.map(w => `<option>${w}</option>`).join('');
   document.getElementById('summaryEmp').innerHTML = employees.map(e => `<option>${e}</option>`).join('');
-  document.getElementById('weekEmp').innerHTML = employees.map(e => `<option>${e}</option>`).join('');
 }
 
 function renderQuickButtons() {
@@ -467,21 +481,43 @@ function updateSummaryView() {
   const con = document.getElementById('summaryContent');
   con.innerHTML = '';
   
+  const allData = {}; // {project|worktype: total}
+  
+  // Loop through ALL localStorage entries (all dates)
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('zottola_hours_')) {
+      const dateData = JSON.parse(localStorage.getItem(key)) || {};
+      
+      // Aggregate all employee's data from this date
+      projects.forEach(p => {
+        workTypes.forEach(w => {
+          types.forEach(t => {
+            const dataKey = `${emp}|${p}|${t}|${w}|`;
+            const hours = dateData[dataKey] || 0;
+            if (hours > 0) {
+              const projKey = `${p}|${w}`;
+              allData[projKey] = (allData[projKey] || 0) + hours;
+            }
+          });
+        });
+      });
+    }
+  }
+  
+  // Display by project
   projects.forEach(p => {
     let pTotal = 0;
     workTypes.forEach(w => {
-      types.forEach(t => {
-        pTotal += data[`${emp}|${p}|${t}|${w}|`] || 0;
-      });
+      const projKey = `${p}|${w}`;
+      pTotal += allData[projKey] || 0;
     });
     if (pTotal === 0) return;
     
     let html = `<div class="summary-box"><p style="margin: 0 0 12px; font-weight: 600;">${p}</p>`;
     workTypes.forEach(w => {
-      let wTotal = 0;
-      types.forEach(t => {
-        wTotal += data[`${emp}|${p}|${t}|${w}|`] || 0;
-      });
+      const projKey = `${p}|${w}`;
+      const wTotal = allData[projKey] || 0;
       if (wTotal > 0) {
         html += `<div style="margin-bottom: 12px;"><p style="font-size: 11px; color: #999; margin: 0 0 6px; text-transform: uppercase;">${w}</p><p style="margin: 0; font-weight: 600;">${wTotal.toFixed(2)}h</p></div>`;
       }
@@ -502,7 +538,7 @@ function updateWeekExportPreview() {
 }
 
 function exportCSV() {
-  let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Onsite,Travel,Total Hours\n';
+  let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
   employees.forEach(e => {
     projects.forEach(p => {
       workTypes.forEach(w => {
@@ -512,7 +548,7 @@ function exportCSV() {
         });
         let total = Object.values(vals).reduce((a, b) => a + b, 0);
         if (total > 0) {
-          csv += `${currentDate},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
+          csv += `${currentDate},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
         }
       });
     });
@@ -530,7 +566,7 @@ function exportFullWeek() {
     
     const mondayDate = getMondayOfWeek(dateStr);
     const weekDates = getDateRange(mondayDate);
-    let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
     
     weekDates.forEach(dateStr => {
       const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
@@ -543,7 +579,7 @@ function exportFullWeek() {
             });
             let total = Object.values(vals).reduce((a, b) => a + b, 0);
             if (total > 0) {
-              csv += `${dateStr},${e},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
+              csv += `${dateStr},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
             }
           });
         });
@@ -575,7 +611,7 @@ function exportPreviousWeek() {
     const prevWeekDate = d.toISOString().split('T')[0];
     const mondayDate = getMondayOfWeek(prevWeekDate);
     const weekDates = getDateRange(mondayDate);
-    let csv = 'Date,Employee,Project,Work Type,Office,Shop,Onsite,Travel,Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
     
     weekDates.forEach(dateStr => {
       const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
@@ -588,7 +624,7 @@ function exportPreviousWeek() {
             });
             let total = Object.values(vals).reduce((a, b) => a + b, 0);
             if (total > 0) {
-              csv += `${dateStr},${e},${p},${w},${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Onsite.toFixed(2)},${vals.Travel.toFixed(2)},${total.toFixed(2)}\n`;
+              csv += `${dateStr},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
             }
           });
         });
@@ -700,12 +736,20 @@ function addProject() {
   }
 }
 
-function deleteProject(p) {
+function deleteProjectByIndex(idx) {
+  const p = projects[parseInt(idx)];
   if (confirm(`Delete "${p}"?`)) {
-    projects = projects.filter(x => x !== p);
+    projects.splice(parseInt(idx), 1);
     localStorage.setItem('zottola_projects', JSON.stringify(projects));
     renderSelects();
     updateProjectList();
+  }
+}
+
+function deleteProject(p) {
+  const idx = projects.indexOf(p);
+  if (idx !== -1) {
+    deleteProjectByIndex(idx);
   }
 }
 
@@ -732,12 +776,20 @@ function addWorkType() {
   }
 }
 
-function deleteWorkType(w) {
+function deleteWorkTypeByIndex(idx) {
+  const w = workTypes[parseInt(idx)];
   if (confirm(`Delete "${w}"?`)) {
-    workTypes = workTypes.filter(x => x !== w);
+    workTypes.splice(parseInt(idx), 1);
     localStorage.setItem('zottola_workTypes', JSON.stringify(workTypes));
     renderSelects();
     updateWorkTypeList();
+  }
+}
+
+function deleteWorkType(w) {
+  const idx = workTypes.indexOf(w);
+  if (idx !== -1) {
+    deleteWorkTypeByIndex(idx);
   }
 }
 
@@ -755,7 +807,7 @@ function resetWorkTypes() {
 
 function updateProjectList() {
   const list = document.getElementById('projectList');
-  list.innerHTML = projects.map(p => `<div class="project-item"><span>${p}</span><button class="delete-btn" onclick="deleteProject('${p}')">Delete</button></div>`).join('');
+  list.innerHTML = projects.map((p, idx) => `<div class="project-item"><span>${p}</span><button class="delete-btn" data-project="${idx}" onclick="deleteProjectByIndex(this.dataset.project)">Delete</button></div>`).join('');
   document.getElementById('projectCount').textContent = projects.length;
   document.getElementById('settingsProjects').textContent = projects.length;
 }
@@ -836,6 +888,63 @@ function restoreFromBackup() {
   }
 }
 
+function exportAllData() {
+  try {
+    let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
+    let recordCount = 0;
+    
+    // Get all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      
+      // Only process hour data
+      if (key.startsWith('zottola_hours_')) {
+        const dateStr = key.replace('zottola_hours_', '');
+        const dayData = JSON.parse(localStorage.getItem(key)) || {};
+        
+        // Loop through all records for this date
+        employees.forEach(e => {
+          projects.forEach(p => {
+            workTypes.forEach(w => {
+              let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
+              types.forEach(t => {
+                vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
+              });
+              let total = Object.values(vals).reduce((a, b) => a + b, 0);
+              if (total > 0) {
+                csv += `${dateStr},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
+                recordCount++;
+              }
+            });
+          });
+        });
+      }
+    }
+    
+    if (recordCount === 0) {
+      alert('No data to export.');
+      return;
+    }
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `zottola_ALL_DATA_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert(`✓ Exported ${recordCount} records!`);
+    console.log('Export complete:', recordCount, 'records');
+  } catch (e) {
+    console.error('Export error:', e);
+    alert('❌ Error exporting data: ' + e.message);
+  }
+}
+
 function confirmRestore() {
   if (!pendingRestore) return;
   
@@ -869,7 +978,7 @@ function cancelRestore() {
 
 function updateWorkTypeList() {
   const list = document.getElementById('workTypeList');
-  list.innerHTML = workTypes.map(w => `<div class="project-item"><span>${w}</span><button class="delete-btn" onclick="deleteWorkType('${w}')">Delete</button></div>`).join('');
+  list.innerHTML = workTypes.map((w, idx) => `<div class="project-item"><span>${w}</span><button class="delete-btn" data-worktype="${idx}" onclick="deleteWorkTypeByIndex(this.dataset.worktype)">Delete</button></div>`).join('');
   document.getElementById('workTypeCount').textContent = workTypes.length;
   document.getElementById('settingsWorkTypes').textContent = workTypes.length;
 }
