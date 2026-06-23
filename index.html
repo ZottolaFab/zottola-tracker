@@ -191,6 +191,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div id="backupStatus"></div>
 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
 <button class="btn-blue" onclick="downloadBackup()" style="flex: 1; min-width: 200px;">Download Backup</button>
+<button class="btn-blue" onclick="previewBackupFile()" style="flex: 1; min-width: 200px;">Preview Backup File</button>
 <button class="btn-green" onclick="restoreFromBackup()" style="flex: 1; min-width: 200px;">Restore from Backup</button>
 </div>
 <p style="font-size: 12px; color: #999; margin-top: 1rem; line-height: 1.5;">
@@ -911,6 +912,100 @@ function restoreFromBackup() {
     console.error('Error:', e);
     alert('❌ Error: ' + e.message);
   }
+}
+
+function previewBackupFile() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const backup = JSON.parse(event.target.result);
+        displayBackupPreview(backup);
+      } catch (err) {
+        alert('❌ Invalid backup file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  fileInput.click();
+}
+
+function displayBackupPreview(backup) {
+  if (!backup.timestamp || !backup.data) {
+    alert('❌ Invalid backup format');
+    return;
+  }
+  
+  const backupDate = new Date(backup.timestamp);
+  const dateStr = backupDate.toLocaleString();
+  
+  // Count unique dates and hours
+  const dateKeys = Object.keys(backup.data);
+  const uniqueDates = dateKeys.filter(k => k.startsWith('zottola_hours_')).map(k => k.replace('zottola_hours_', ''));
+  
+  let totalHours = 0;
+  let dateRanges = '';
+  dateKeys.forEach(key => {
+    if (key.startsWith('zottola_hours_')) {
+      const dayData = JSON.parse(backup.data[key]);
+      Object.values(dayData).forEach(hours => {
+        totalHours += parseFloat(hours) || 0;
+      });
+    }
+  });
+  
+  if (uniqueDates.length > 0) {
+    const sorted = uniqueDates.sort();
+    dateRanges = `${sorted[0]} to ${sorted[sorted.length - 1]}`;
+  }
+  
+  // Build preview HTML
+  let html = `
+<div id="backupPreviewModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+<div style="background: white; padding: 24px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+<h2 style="margin: 0 0 16px; font-size: 20px;">Backup Preview</h2>
+
+<div style="background: #f5f5f5; padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 13px;">
+  <p style="margin: 0 0 8px;"><strong>📅 Backup Date:</strong> ${dateStr}</p>
+  <p style="margin: 0 0 8px;"><strong>📊 Date Range:</strong> ${dateRanges || 'No data'}</p>
+  <p style="margin: 0 0 8px;"><strong>📈 Total Hours:</strong> ${totalHours.toFixed(2)}h</p>
+  <p style="margin: 0 0 8px;"><strong>📅 Unique Dates:</strong> ${uniqueDates.length}</p>
+  <p style="margin: 0;"><strong>⚙️ Projects:</strong> ${backup.projectCount || 'Unknown'} | <strong>Work Types:</strong> ${backup.workTypeCount || 'Unknown'}</p>
+</div>
+
+<div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 12px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd;">
+  <p style="margin: 0 0 8px; font-weight: 600;">📋 Dates with data:</p>
+  ${uniqueDates.length > 0 ? uniqueDates.map(d => `<p style="margin: 2px 0; font-family: monospace; font-size: 11px;">${d}</p>`).join('') : '<p style="margin: 0; color: #999;">No dates found</p>'}
+</div>
+
+<div style="display: flex; gap: 8px;">
+  <button onclick="proceedWithFileRestore(); document.getElementById('backupPreviewModal').remove();" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Proceed with Restore</button>
+  <button onclick="document.getElementById('backupPreviewModal').remove();" style="flex: 1; padding: 10px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Cancel</button>
+</div>
+</div>
+</div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', html);
+  
+  // Store the backup for later restore
+  window.pendingRestoreFile = backup;
+}
+
+function proceedWithFileRestore() {
+  if (!window.pendingRestoreFile) {
+    alert('❌ No backup data available');
+    return;
+  }
+  
+  pendingRestore = window.pendingRestoreFile;
+  confirmRestore();
 }
 
 function exportAllData() {
