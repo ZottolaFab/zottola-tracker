@@ -92,14 +92,14 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div class="grid-4" id="quickButtons"></div>
 </div>
 
-<div class="section">
-<div class="section-title">Manual Entry</div>
-<div class="grid-4" id="manualInputs"></div>
-</div>
-
 <div class="summary-box">
 <div class="summary-title" id="summaryTitle">Select employee and project</div>
 <div class="hours-grid" id="summaryHours"></div>
+</div>
+
+<div class="section">
+<div class="section-title">Manual Entry</div>
+<div class="grid-4" id="manualInputs"></div>
 </div>
 
 <button onclick="exportCSV()" style="width: 100%;">Export Today's Hours</button>
@@ -174,7 +174,20 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div class="info-box">App Status<br><br>Employees: 10<br>Projects: <span id="settingsProjects">0</span><br>Work Types: <span id="settingsWorkTypes">0</span></div>
 
 <div class="section" style="margin-top: 2rem;">
-<div class="section-title">Data Backup</div>
+<div class="section-title">Data Backup & Email</div>
+<p style="font-size: 12px; color: #666; margin-bottom: 1rem;">Daily automated email backup reminder sent to m.haywiser@zottolafab.com at 5 PM (via Claude Cowork scheduler).</p>
+<div style="background: #f0f8ff; border-left: 4px solid #2196F3; padding: 12px; margin-bottom: 1rem; font-size: 12px; border-radius: 2px;">
+  <p style="margin: 0 0 8px; font-weight: 600;">📧 Backup Email Workflow:</p>
+  <p style="margin: 0 0 6px;">1. Cowork sends backup reminder at 5 PM daily</p>
+  <p style="margin: 0 0 6px;">2. Click "Download Backup" button below</p>
+  <p style="margin: 0 0 6px;">3. Save file: zottola_backup_[DATE].json</p>
+  <p style="margin: 0;">4. Upload JSON to Google Drive backup folder</p>
+</div>
+<button class="btn-green" onclick="downloadBackup()" style="width: 100%; margin-bottom: 1rem;">Download Backup Now</button>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+<div class="section-title">Manual Backup (Restore)</div>
 <div id="backupStatus"></div>
 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
 <button class="btn-blue" onclick="downloadBackup()" style="flex: 1; min-width: 200px;">Download Backup</button>
