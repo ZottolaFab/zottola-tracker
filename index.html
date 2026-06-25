@@ -70,6 +70,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <button class="tab-btn active" onclick="switchTab('track', event)">Track</button>
 <button class="tab-btn" onclick="switchTab('week', event)">Week View</button>
 <button class="tab-btn" onclick="switchTab('summary', event)">Summary</button>
+<button class="tab-btn" onclick="switchTab('corrections', event)">Corrections</button>
 <button class="tab-btn" onclick="switchTab('export', event)">Export</button>
 <button class="tab-btn" onclick="switchTab('admin', event)">Admin</button>
 <button class="tab-btn" onclick="switchTab('settings', event)">Settings</button>
@@ -79,7 +80,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div id="track" class="tab-content active">
 <div class="grid-2">
 <div><label>Who is working?</label><select id="emp" onchange="onEmployeeChange()"><option>Fred</option><option>Jim</option><option>Laura</option><option>Mark</option><option>Jeff</option><option>Rich</option><option>Cody</option><option>Darin</option><option>Kate</option><option>Tony</option></select></div>
-<div><label>Current project</label><select id="proj" onchange="saveState()"></select></div>
+<div><label>Current project</label><select id="proj" onchange="onProjectChange()"></select></div>
 </div>
 
 <div class="grid-2">
@@ -102,6 +103,8 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div class="grid-4" id="manualInputs"></div>
 </div>
 
+<button onclick="saveEntry()" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; margin-bottom: 1rem;">✓ Save Entry</button>
+
 <button onclick="exportCSV()" style="width: 100%;">Export Today's Hours</button>
 </div>
 
@@ -116,6 +119,13 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <label>View for</label>
 <select id="summaryEmp" onchange="updateSummaryView()" style="margin-bottom: 1.5rem;"></select>
 <div id="summaryContent"></div>
+</div>
+
+<div id="corrections" class="tab-content">
+<label>Select date to view & correct entries</label>
+<input type="date" id="correctionsDate" onchange="loadCorrectionsForDate()" style="margin-bottom: 1.5rem;">
+
+<div id="correctionsContent"></div>
 </div>
 
 <div id="export" class="tab-content">
@@ -183,11 +193,6 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   <p style="margin: 0 0 6px;">3. Save file: zottola_backup_[DATE].json</p>
   <p style="margin: 0;">4. Upload JSON to Google Drive backup folder</p>
 </div>
-<button class="btn-green" onclick="downloadBackup()" style="width: 100%; margin-bottom: 1rem;">Download Backup Now</button>
-</div>
-
-<div class="section" style="margin-top: 2rem;">
-<div class="section-title">Manual Backup (Restore)</div>
 <div id="backupStatus"></div>
 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
 <button class="btn-blue" onclick="downloadBackup()" style="flex: 1; min-width: 200px;">Download Backup</button>
@@ -349,6 +354,22 @@ function onEmployeeChange() {
   document.getElementById('proj').selectedIndex = 0;
   document.getElementById('workType').selectedIndex = 0;
   document.getElementById('category').value = '';
+  // Clear all hour inputs to 0.00
+  types.forEach(t => {
+    const inp = document.querySelector(`input[data-type="${t}"]`);
+    if (inp) inp.value = '0.00';
+  });
+  saveState();
+}
+
+function onProjectChange() {
+  document.getElementById('workType').selectedIndex = 0;
+  document.getElementById('category').value = '';
+  // Zero out manual entry hours
+  types.forEach(t => {
+    const inp = document.querySelector(`input[data-type="${t}"]`);
+    if (inp) inp.value = '0.00';
+  });
   saveState();
 }
 
@@ -419,6 +440,102 @@ function updateWeekView() {
   document.getElementById('weekViewDate').value = dateStr;
 }
 
+function loadCorrectionsForDate() {
+  const dateStr = document.getElementById('correctionsDate').value;
+  if (!dateStr) {
+    document.getElementById('correctionsContent').innerHTML = '';
+    return;
+  }
+  
+  const storageKey = getStorageKey(dateStr);
+  const dayData = JSON.parse(localStorage.getItem(storageKey)) || {};
+  const con = document.getElementById('correctionsContent');
+  
+  console.log('Corrections - Date:', dateStr, 'Storage Key:', storageKey, 'Data:', dayData);
+  
+  if (Object.keys(dayData).length === 0) {
+    con.innerHTML = '<p style="color: #999; text-align: center; margin-top: 2rem;">No entries for this date</p>';
+    return;
+  }
+  
+  let html = '<div style="margin-top: 1rem;">';
+  
+  // Group by employee
+  const byEmployee = {};
+  Object.keys(dayData).forEach(key => {
+    const [emp, proj, type, wt] = key.split('|');
+    if (!byEmployee[emp]) byEmployee[emp] = [];
+    byEmployee[emp].push({ emp, proj, type, wt, hours: dayData[key], key });
+  });
+  
+  // Display by employee
+  Object.keys(byEmployee).sort().forEach(emp => {
+    html += `<div style="background: #f5f5f5; padding: 12px; margin-bottom: 12px; border-radius: 4px;">`;
+    html += `<p style="margin: 0 0 12px; font-weight: 600; font-size: 14px;">${emp}</p>`;
+    
+    byEmployee[emp].forEach((entry, idx) => {
+      const entryId = `entry_${emp}_${idx}`;
+      html += `
+<div style="background: white; padding: 12px; margin-bottom: 8px; border-radius: 3px; border-left: 3px solid #2196F3;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+    <div>
+      <label style="font-size: 11px; color: #666; text-transform: uppercase;">Project</label>
+      <select id="${entryId}_proj" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px;">
+        ${projects.map(p => `<option value="${p}" ${p === entry.proj ? 'selected' : ''}>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div>
+      <label style="font-size: 11px; color: #666; text-transform: uppercase;">Work Type</label>
+      <select id="${entryId}_wt" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px;">
+        ${workTypes.map(w => `<option value="${w}" ${w === entry.wt ? 'selected' : ''}>${w}</option>`).join('')}
+      </select>
+    </div>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+    <div>
+      <label style="font-size: 11px; color: #666; text-transform: uppercase;">Category</label>
+      <input type="text" id="${entryId}_cat" placeholder="e.g., Rework, Rush" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box;" value="">
+    </div>
+    <div>
+      <label style="font-size: 11px; color: #666; text-transform: uppercase;">${entry.type} Hours</label>
+      <input type="number" id="${entryId}_hrs" step="0.25" min="0" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box;" value="${parseFloat(entry.hours).toFixed(2)}">
+    </div>
+  </div>
+  
+  <button onclick="saveCorrection(&quot;${emp}&quot;, &quot;${entry.proj}&quot;, &quot;${entry.type}&quot;, &quot;${entry.wt}&quot;, &quot;${entryId}&quot;, &quot;${dateStr}&quot;)" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; font-weight: 600; font-size: 12px;">Save Correction</button>
+</div>
+      `;
+    });
+    
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  con.innerHTML = html;
+}
+
+function saveCorrection(oldEmp, oldProj, oldType, oldWt, entryId, dateStr) {
+  const newProj = document.getElementById(entryId + '_proj').value;
+  const newWt = document.getElementById(entryId + '_wt').value;
+  const newHours = parseFloat(document.getElementById(entryId + '_hrs').value) || 0;
+  
+  const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
+  
+  // Remove old entry
+  delete dayData[`${oldEmp}|${oldProj}|${oldType}|${oldWt}|`];
+  
+  // Add new entry
+  dayData[`${oldEmp}|${newProj}|${oldType}|${newWt}|`] = newHours;
+  
+  // Save
+  localStorage.setItem(getStorageKey(dateStr), JSON.stringify(dayData));
+  backupData();
+  
+  alert('✓ Correction saved!');
+  loadCorrectionsForDate();
+}
+
 function init() {
   renderSelects();
   renderQuickButtons();
@@ -433,9 +550,53 @@ function init() {
   updateSummaryView();
 }
 
-function saveState() { 
-  saveData(); 
+function saveEntry() {
+  const emp = document.getElementById('emp').value;
+  const proj = document.getElementById('proj').value;
+  const wt = document.getElementById('workType').value;
+  const cat = document.getElementById('category').value;
+  
+  if (!emp || !proj || !wt) {
+    alert('❌ Please select Employee, Project, and Work Type first');
+    return;
+  }
+  
+  // Get all hour values
+  let totalHours = 0;
+  types.forEach(t => {
+    const inp = document.querySelector(`input[data-type="${t}"]`);
+    const hours = parseFloat(inp?.value) || 0;
+    if (hours > 0) {
+      const key = `${emp}|${proj}|${t}|${wt}|`;
+      data[key] = hours;
+      totalHours += hours;
+    }
+  });
+  
+  if (totalHours === 0) {
+    alert('❌ Please enter at least some hours');
+    return;
+  }
+  
+  // Save to localStorage and backup
+  localStorage.setItem(getStorageKey(currentDate), JSON.stringify(data));
+  backupData();
   updateSummary();
+  
+  // Clear for next entry
+  document.getElementById('proj').selectedIndex = 0;
+  document.getElementById('workType').selectedIndex = 0;
+  document.getElementById('category').value = '';
+  types.forEach(t => {
+    const inp = document.querySelector(`input[data-type="${t}"]`);
+    if (inp) inp.value = '0.00';
+  });
+  
+  alert(`✓ Entry saved! ${totalHours.toFixed(2)}h logged for ${proj}`);
+  saveState();
+}
+
+function saveState() { 
   localStorage.setItem('zottola_emp', document.getElementById('emp').value);
   localStorage.setItem('zottola_proj', document.getElementById('proj').value);
   localStorage.setItem('zottola_workType', document.getElementById('workType').value);
