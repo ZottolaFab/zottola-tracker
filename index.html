@@ -536,7 +536,33 @@ function saveCorrection(oldEmp, oldProj, oldType, oldWt, entryId, dateStr) {
   loadCorrectionsForDate();
 }
 
+// Cloud sync from Google Sheets via proxy
+async function syncFromGoogleSheets() {
+  try {
+    const proxyUrl = 'https://script.google.com/macros/s/AKfycbygRVA_6dFCF9VukaDzPHIioQkF7AYWmhezv9p8PTZTXtY4luEaEa6caB-EUTKj6nWM/exec';
+    
+    // Fetch Projects
+    const projectsResponse = await fetch(proxyUrl + '?action=getProjects');
+    const projectsJson = await projectsResponse.json();
+    if (projectsJson.success && projectsJson.data.length > 0) {
+      localStorage.setItem('zottola_projects', JSON.stringify(projectsJson.data));
+    }
+    
+    // Fetch Work Types
+    const workTypesResponse = await fetch(proxyUrl + '?action=getWorkTypes');
+    const workTypesJson = await workTypesResponse.json();
+    if (workTypesJson.success && workTypesJson.data.length > 0) {
+      localStorage.setItem('zottola_workTypes', JSON.stringify(workTypesJson.data));
+    }
+    
+    console.log('✓ Cloud sync successful');
+  } catch (err) {
+    console.log('Cloud sync failed (offline or access issue) — using local data', err);
+  }
+}
+
 function init() {
+  syncFromGoogleSheets();
   renderSelects();
   renderQuickButtons();
   renderManualInputs();
