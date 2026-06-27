@@ -68,9 +68,9 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div class="tabs-wrapper">
 <div class="tabs">
 <button class="tab-btn active" onclick="switchTab('track', event)">Track</button>
+<button class="tab-btn" onclick="switchTab('corrections', event)">Corrections</button>
 <button class="tab-btn" onclick="switchTab('week', event)">Week View</button>
 <button class="tab-btn" onclick="switchTab('summary', event)">Summary</button>
-<button class="tab-btn" onclick="switchTab('corrections', event)">Corrections</button>
 <button class="tab-btn" onclick="switchTab('export', event)">Export</button>
 <button class="tab-btn" onclick="switchTab('admin', event)">Admin</button>
 <button class="tab-btn" onclick="switchTab('settings', event)">Settings</button>
@@ -89,8 +89,8 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div class="section">
-<div class="section-title">Quick Adjustment</div>
-<div class="grid-4" id="quickButtons"></div>
+<div class="section-title">Quick Adjustment (Hours)</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="wheelInputs"></div>
 </div>
 
 <div class="summary-box">
@@ -116,7 +116,10 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div id="summary" class="tab-content">
-<label>View for</label>
+<label>Week starting (Monday)</label>
+<input type="date" id="summaryDate" onchange="updateSummaryView()" style="margin-bottom: 1rem;">
+
+<label style="margin-top: 1rem;">View for</label>
 <select id="summaryEmp" onchange="updateSummaryView()" style="margin-bottom: 1.5rem;"></select>
 <div id="summaryContent"></div>
 </div>
@@ -644,8 +647,16 @@ function renderSelects() {
 }
 
 function renderQuickButtons() {
-  const btn = document.getElementById('quickButtons');
-  btn.innerHTML = types.map(t => `<div style="display: flex; gap: 6px;"><button onclick="addHours('${t}',0.5)" style="flex: 1; font-size: 12px;">+0.5h ${t}</button><button onclick="addHours('${t}',1)" style="flex: 1; font-size: 12px;">+1h ${t}</button></div>`).join('');
+  const inp = document.getElementById('wheelInputs');
+  inp.innerHTML = types.map(t => `<div><label>${t}</label><input type="number" min="0.5" max="12" step="0.5" value="0.5" style="width: 100%; padding: 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;" onchange="setQuickHours('${t}', this.value)" onkeypress="if(event.key==='Enter') setQuickHours('${t}', this.value); this.value='0.5';"></div>`).join('');
+}
+
+function setQuickHours(t, v) {
+  const k = getKey(t);
+  data[k] = Math.max(0.5, parseFloat(v) || 0.5);
+  saveData();
+  renderManualInputs();
+  updateSummary();
 }
 
 function renderManualInputs() {
@@ -690,53 +701,151 @@ function updateSummary() {
 }
 
 function updateSummaryView() {
-  const emp = document.getElementById('summaryEmp').value;
+  const selectedEmp = document.getElementById('summaryEmp').value;
+  const mondayStr = document.getElementById('summaryDate').value;
   const con = document.getElementById('summaryContent');
   con.innerHTML = '';
   
-  const allData = {}; // {project|worktype: total}
+  if (!mondayStr) {
+    con.innerHTML = '<p style="color: #999;">Please select a Monday date</p>';
+    return;
+  }
   
-  // Loop through ALL localStorage entries (all dates)
+  // Calculate Monday to Saturday range
+  const mondayDate = new Date(mondayStr + 'T00:00:00');
+  const saturdayDate = new Date(mondayDate);
+  saturdayDate.setDate(saturdayDate.getDate() + 5);
+  
+  const weekDates = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(mondayDate);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    weekDates.push(dateStr);
+  }
+  
+  // Collect all unique employees and dates for this week
+  const empData = {}; // {emp: {date: {proj: {worktype: {category: {office, shop, travel, onsite}}}}}}
+  
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key.startsWith('zottola_hours_')) {
+      const dateStr = key.replace('zottola_hours_', '');
+      
+      // Only include dates in this week
+      if (!weekDates.includes(dateStr)) continue;
+      
       const dateData = JSON.parse(localStorage.getItem(key)) || {};
       
-      // Aggregate all employee's data from this date
-      projects.forEach(p => {
-        workTypes.forEach(w => {
-          types.forEach(t => {
-            const dataKey = `${emp}|${p}|${t}|${w}|`;
-            const hours = dateData[dataKey] || 0;
-            if (hours > 0) {
-              const projKey = `${p}|${w}`;
-              allData[projKey] = (allData[projKey] || 0) + hours;
-            }
-          });
-        });
-      });
+      for (const [dataKey, hours] of Object.entries(dateData)) {
+        if (hours > 0) {
+          const parts = dataKey.split('|');
+          if (parts.length >= 4) {
+            const [emp, proj, hourType, workType] = [parts[0], parts[1], parts[2], parts[3]];
+            const category = parts[4] || '';
+            
+            if (!empData[emp]) empData[emp] = {};
+            if (!empData[emp][dateStr]) empData[emp][dateStr] = {};
+            if (!empData[emp][dateStr][proj]) empData[emp][dateStr][proj] = {};
+            if (!empData[emp][dateStr][proj][workType]) empData[emp][dateStr][proj][workType] = {};
+            if (!empData[emp][dateStr][proj][workType][category]) empData[emp][dateStr][proj][workType][category] = {office: 0, shop: 0, travel: 0, onsite: 0};
+            
+            const catKey = category.toLowerCase();
+            empData[emp][dateStr][proj][workType][category][hourType.toLowerCase()] += hours;
+          }
+        }
+      }
     }
   }
   
-  // Display by project
-  projects.forEach(p => {
-    let pTotal = 0;
-    workTypes.forEach(w => {
-      const projKey = `${p}|${w}`;
-      pTotal += allData[projKey] || 0;
-    });
-    if (pTotal === 0) return;
+  // Get list of employees to display
+  const empsToShow = selectedEmp ? [selectedEmp] : Object.keys(empData).sort();
+  
+  if (empsToShow.length === 0 || empsToShow[0] === '') {
+    con.innerHTML = '<p style="color: #999;">No data for this week</p>';
+    return;
+  }
+  
+  // For each employee, create a table
+  empsToShow.forEach(emp => {
+    if (!empData[emp] || Object.keys(empData[emp]).length === 0) return;
     
-    let html = `<div class="summary-box"><p style="margin: 0 0 12px; font-weight: 600;">${p}</p>`;
-    workTypes.forEach(w => {
-      const projKey = `${p}|${w}`;
-      const wTotal = allData[projKey] || 0;
-      if (wTotal > 0) {
-        html += `<div style="margin-bottom: 12px;"><p style="font-size: 11px; color: #999; margin: 0 0 6px; text-transform: uppercase;">${w}</p><p style="margin: 0; font-weight: 600;">${wTotal.toFixed(2)}h</p></div>`;
-      }
+    let empHtml = `<div style="margin-bottom: 2rem;"><h3 style="font-size: 16px; margin: 1rem 0 0.5rem; font-weight: 600;">${emp}</h3>`;
+    
+    // Create table
+    empHtml += `<div style="overflow-x: auto; margin-bottom: 1rem;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #f0f0f0; border-bottom: 2px solid #ddd;">
+            <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Date</th>
+            <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Project</th>
+            <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Work Type</th>
+            <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Category</th>
+            <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd;">Office</th>
+            <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd;">Shop</th>
+            <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd;">Travel</th>
+            <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd;">Onsite</th>
+            <th style="padding: 8px; text-align: right; font-weight: 600;">Total</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    
+    const dates = Object.keys(empData[emp]).sort();
+    let empOfficeTotal = 0, empShopTotal = 0, empTravelTotal = 0, empOnsiteTotal = 0;
+    
+    dates.forEach(date => {
+      const projects = Object.keys(empData[emp][date]).sort();
+      projects.forEach(proj => {
+        const workTypes = Object.keys(empData[emp][date][proj]).sort();
+        workTypes.forEach(workType => {
+          const categories = Object.keys(empData[emp][date][proj][workType]);
+          categories.forEach(cat => {
+            const catData = empData[emp][date][proj][workType][cat];
+            const rowTotal = catData.office + catData.shop + catData.travel + catData.onsite;
+            empOfficeTotal += catData.office;
+            empShopTotal += catData.shop;
+            empTravelTotal += catData.travel;
+            empOnsiteTotal += catData.onsite;
+            
+            empHtml += `<tr style="border-bottom: 1px solid #e0e0e0;">
+              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${date}</td>
+              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${proj}</td>
+              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${workType}</td>
+              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${cat || '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.office > 0 ? catData.office.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.shop > 0 ? catData.shop.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.travel > 0 ? catData.travel.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.onsite > 0 ? catData.onsite.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; font-weight: 600;">${rowTotal.toFixed(2)}</td>
+            </tr>`;
+          });
+        });
+      });
     });
-    html += `<div style="border-top: 1px solid #ddd; padding-top: 8px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 600;"><span>Project Total</span><span>${pTotal.toFixed(2)}h</span></div></div>`;
-    con.innerHTML += html;
+    
+    // Summary row
+    const empNonOnsiteTotal = empOfficeTotal + empShopTotal + empTravelTotal;
+    const empGrandTotal = empNonOnsiteTotal + empOnsiteTotal;
+    empHtml += `<tr style="background: #e3f2fd; font-weight: 600; border-top: 2px solid #1565c0;">
+      <td colspan="4" style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">WEEKLY TOTALS</td>
+      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOfficeTotal.toFixed(2)}</td>
+      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empShopTotal.toFixed(2)}</td>
+      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empTravelTotal.toFixed(2)}</td>
+      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsiteTotal.toFixed(2)}</td>
+      <td style="padding: 10px; text-align: right;">${empGrandTotal.toFixed(2)}</td>
+    </tr>`;
+    
+    empHtml += `</tbody></table></div>`;
+    
+    // Add combined totals note - separate lines, WEEK TOTAL larger
+    const combinedNonOnsite = empOfficeTotal + empShopTotal + empTravelTotal;
+    empHtml += `<div style="background: #f9f9f9; padding: 16px; border-radius: 4px; color: #333;">
+      <div style="font-size: 13px; margin-bottom: 8px;"><strong>Combined (Office + Shop + Travel):</strong> ${combinedNonOnsite.toFixed(2)}h</div>
+      <div style="font-size: 13px; margin-bottom: 12px;"><strong>Onsite (separate):</strong> ${empOnsiteTotal.toFixed(2)}h</div>
+      <div style="font-size: 18px; font-weight: bold; color: #1565c0;"><strong>WEEK TOTAL: ${empGrandTotal.toFixed(2)}h</strong></div>
+    </div></div>`;
+    
+    con.innerHTML += empHtml;
   });
 }
 
