@@ -539,7 +539,7 @@ function saveCorrection(oldEmp, oldProj, oldType, oldWt, entryId, dateStr) {
 // Cloud sync from Google Sheets via proxy
 async function syncFromGoogleSheets() {
   try {
-    const proxyUrl = 'https://script.google.com/macros/s/AKfycbygRVA_6dFCF9VukaDzPHIioQkF7AYWmhezv9p8PTZTXtY4luEaEa6caB-EUTKj6nWM/exec';
+    const proxyUrl = 'https://script.google.com/macros/s/AKfycbzWiGm8v8-m4KzKB3YL66zE6TaIVUcHofATaW9gW3w2D3_ww7t7R3QfWix8iBE1GV1Fmg/exec';
     
     // Fetch Projects
     const projectsResponse = await fetch(proxyUrl + '?action=getProjects');
