@@ -58,54 +58,14 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <h1>Zottola Fab Shop Tracker</h1>
 </div>
 
-<div class="date-section">
-<div class="date-controls">
-<div class="date-display" id="dateDisplay"></div>
-<input type="date" id="dateInput" onchange="jumpToDate()">
-</div>
-</div>
-
 <div class="tabs-wrapper">
 <div class="tabs">
-<button class="tab-btn active" onclick="switchTab('track', event)">Track</button>
-<button class="tab-btn" onclick="switchTab('corrections', event)">Corrections</button>
+<button class="tab-btn active" onclick="switchTab('summary', event)">Summary</button>
 <button class="tab-btn" onclick="switchTab('week', event)">Week View</button>
-<button class="tab-btn" onclick="switchTab('summary', event)">Summary</button>
 <button class="tab-btn" onclick="switchTab('export', event)">Export</button>
 <button class="tab-btn" onclick="switchTab('admin', event)">Admin</button>
 <button class="tab-btn" onclick="switchTab('settings', event)">Settings</button>
 </div>
-</div>
-
-<div id="track" class="tab-content active">
-<div class="grid-2">
-<div><label>Who is working?</label><select id="emp" onchange="onEmployeeChange()"><option>Fred</option><option>Jim</option><option>Laura</option><option>Mark</option><option>Jeff</option><option>Rich</option><option>Cody</option><option>Darin</option><option>Kate</option><option>Tony</option></select></div>
-<div><label>Current project</label><select id="proj" onchange="onProjectChange()"></select><div id="pwBadge" style="margin-top: 8px; font-weight: 600; color: #d32f2f; display: none; padding: 4px 8px; background: #ffebee; border-radius: 4px; font-size: 12px; text-align: center;">🔵 PW PROJECT</div></div>
-</div>
-
-<div class="grid-2">
-<div><label>Work type</label><select id="workType" onchange="saveState()"></select></div>
-<div><label>Category (optional)</label><input type="text" id="category" placeholder="e.g., Rework, Rush" onchange="saveState()"></div>
-</div>
-
-<div class="section">
-<div class="section-title">Quick Adjustment (Hours)</div>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="wheelInputs"></div>
-</div>
-
-<div class="summary-box">
-<div class="summary-title" id="summaryTitle">Select employee and project</div>
-<div class="hours-grid" id="summaryHours"></div>
-</div>
-
-<div class="section">
-<div class="section-title">Manual Entry</div>
-<div class="grid-4" id="manualInputs"></div>
-</div>
-
-<button onclick="saveEntry()" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; margin-bottom: 1rem;">✓ Save Entry</button>
-
-<button onclick="exportCSV()" style="width: 100%;">Export Today's Hours</button>
 </div>
 
 <div id="week" class="tab-content">
@@ -115,9 +75,10 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div id="weekContent"></div>
 </div>
 
-<div id="summary" class="tab-content">
+<div id="summary" class="tab-content active">
 <label>Week starting (Monday)</label>
-<input type="date" id="summaryDate" onchange="updateSummaryView()" style="margin-bottom: 1rem;">
+<input type="date" id="summaryDate" onchange="saveSummaryDatePref(); updateSummaryView()" style="margin-bottom: 4px;">
+<div id="summaryWeekRangeLabel" style="font-size: 13px; color: #666; margin-bottom: 1rem;"></div>
 
 <label style="margin-top: 1rem;">View for</label>
 <select id="summaryEmp" onchange="updateSummaryView()" style="margin-bottom: 1.5rem;"></select>
@@ -134,21 +95,38 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
     <div><label>Employee</label><input type="text" id="addEmpDisplay" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;"></div>
     <div><label>Project</label><select id="addProj" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onchange="onAddProjChange()"></select><div id="addPwBadge" style="margin-top: 8px; font-weight: 600; color: #d32f2f; display: none; padding: 4px 8px; background: #ffebee; border-radius: 4px; font-size: 12px; text-align: center;">🔵 PW PROJECT</div></div>
     <div><label>Work Type</label><select id="addWorkType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></select></div>
-    <div><label>Category (optional)</label><input type="text" id="addCategory" placeholder="e.g., Rework, Rush" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
+    <div><label>Remarks (optional)</label><input type="text" id="addCategory" placeholder="e.g., Rework, Rush" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
   </div>
   
   <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
-    <div><label>Office Hours</label><input type="number" id="addOffice" min="0" max="12" step="0.25" value="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
-    <div><label>Shop Hours</label><input type="number" id="addShop" min="0" max="12" step="0.25" value="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
-    <div><label>Travel Hours</label><input type="number" id="addTravel" min="0" max="12" step="0.25" value="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
-    <div><label>Onsite Hours</label><input type="number" id="addOnsite" min="0" max="12" step="0.25" value="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
-  </div>
-  
-  <div style="margin-bottom: 12px;">
-    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
-      <input type="checkbox" id="addPrevailingWage" style="width: 16px; height: 16px; cursor: pointer;">
-      <span>Prevailing Wage (applies to Onsite hours)</span>
-    </label>
+    <div><label>Office Hours</label>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="spinnerStep('addOffice', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addOffice" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addOffice')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addOffice', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+      </div>
+    </div>
+    <div><label>Shop Hours</label>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="spinnerStep('addShop', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addShop" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addShop')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addShop', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+      </div>
+    </div>
+    <div><label>Travel Hours</label>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="spinnerStep('addTravel', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addTravel" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addTravel')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addTravel', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+      </div>
+    </div>
+    <div><label>Onsite Hours</label>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button type="button" onclick="spinnerStep('addOnsite', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addOnsite" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addOnsite')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addOnsite', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+      </div>
+    </div>
   </div>
   
   <div style="display: flex; gap: 12px;">
@@ -158,13 +136,6 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div id="summaryContent"></div>
-</div>
-
-<div id="corrections" class="tab-content">
-<label>Select date to view & correct entries</label>
-<input type="date" id="correctionsDate" onchange="loadCorrectionsForDate()" style="margin-bottom: 1.5rem;">
-
-<div id="correctionsContent"></div>
 </div>
 
 <div id="export" class="tab-content">
@@ -202,6 +173,26 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div class="section">
+<div class="info-box">➕ Add Temporary (This Device Only)</div>
+<p style="font-size: 12px; color: #666; margin-bottom: 1rem; line-height: 1.6;">
+  Need to log hours for someone or something not yet in the Google Sheet? Add it here — it works immediately on this device, but it will <strong>not</strong> sync to other tablets or to the Sheet. Once it's added to the Sheet for real, remove the temporary version below so the list stays clean.
+</p>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 8px;">
+  <input type="text" id="tempEmployeeInput" placeholder="Employee name" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  <button onclick="addTempEmployeeUI()" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">+ Employee</button>
+</div>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 8px;">
+  <input type="text" id="tempProjectInput" placeholder="Project name" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  <button onclick="addTempProjectUI()" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">+ Project</button>
+</div>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 1rem;">
+  <input type="text" id="tempWorkTypeInput" placeholder="Work type name" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  <button onclick="addTempWorkTypeUI()" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">+ Work Type</button>
+</div>
+<div id="tempEntriesList"></div>
+</div>
+
+<div class="section">
 <div class="info-box">🔵 Prevailing Wage Projects</div>
 <p style="font-size: 14px; color: #333; margin-bottom: 1rem; line-height: 1.6;">
   <strong>Prevailing wage projects are managed through the Google Sheet.</strong><br><br>
@@ -226,16 +217,6 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   <strong>PW projects synced:</strong> <span id="syncedPWCount">0</span>
 </p>
 </div>
-
-
-  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px; text-align: center;">
-    <h3 style="margin: 0 0 1rem; color: #333;">Restore Backup?</h3>
-    <p id="restoreConfirmText" style="margin: 0 0 1.5rem; white-space: pre-wrap; color: #666; text-align: left;"></p>
-    <div style="display: flex; gap: 12px;">
-      <button onclick="confirmRestore()" style="flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">CONFIRM</button>
-      <button onclick="cancelRestore()" style="flex: 1; padding: 12px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">CANCEL</button>
-    </div>
-  </div>
 </div>
 
 <div id="settings" class="tab-content">
@@ -267,6 +248,17 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 </div>
 </div>
+</div>
+
+<div id="restoreConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 10000;">
+  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px; text-align: center;">
+    <h3 style="margin: 0 0 1rem; color: #333;">Restore Backup?</h3>
+    <p id="restoreConfirmText" style="margin: 0 0 1.5rem; white-space: pre-wrap; color: #666; text-align: left;"></p>
+    <div style="display: flex; gap: 12px;">
+      <button onclick="confirmRestore()" style="flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">CONFIRM</button>
+      <button onclick="cancelRestore()" style="flex: 1; padding: 12px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">CANCEL</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -324,8 +316,75 @@ let projects = JSON.parse(localStorage.getItem('zottola_projects')) || defaultPr
 let workTypes = JSON.parse(localStorage.getItem('zottola_workTypes')) || defaultWorkTypes;
 let data = {};
 
+// Temporary (local-only) entries: lets a device add an employee/project/work
+// type that isn't in the Google Sheet yet, so it can be used for tracking
+// hours immediately. These never push up to the Sheet — they're purely a
+// local convenience, flagged as "(temp)" everywhere they appear, and easy to
+// remove once the real entry exists in the Sheet. Removing one only removes
+// it from the pick-lists; any hours already logged under that name stay put.
+function loadTempList(storageKey) {
+  return JSON.parse(localStorage.getItem(storageKey)) || [];
+}
+function saveTempList(storageKey, list) {
+  localStorage.setItem(storageKey, JSON.stringify(list));
+}
+// Returns true if added, false if it already exists (case-insensitive) in
+// either the synced list or the temp list — avoids near-duplicate spelling
+// variants of the same name/project piling up.
+function addTempEntry(storageKey, targetArray, name) {
+  name = name.trim();
+  if (!name) return false;
+  const lower = name.toLowerCase();
+  if (targetArray.some(n => n.toLowerCase() === lower)) return false;
+  const list = loadTempList(storageKey);
+  if (list.some(n => n.toLowerCase() === lower)) return false;
+  list.push(name);
+  saveTempList(storageKey, list);
+  targetArray.push(name);
+  return true;
+}
+function removeTempEntry(storageKey, targetArray, name) {
+  const list = loadTempList(storageKey).filter(n => n !== name);
+  saveTempList(storageKey, list);
+  const idx = targetArray.indexOf(name);
+  if (idx !== -1) targetArray.splice(idx, 1);
+}
+// Merges saved temp entries into the live employees/projects/workTypes
+// arrays. Must run AFTER syncFromGoogleSheets(), since that reassigns
+// projects/workTypes wholesale and would otherwise wipe this out.
+function applyTempEntries() {
+  loadTempList('zottola_tempEmployees').forEach(n => { if (!employees.includes(n)) employees.push(n); });
+  loadTempList('zottola_tempProjects').forEach(n => { if (!projects.includes(n)) projects.push(n); });
+  loadTempList('zottola_tempWorkTypes').forEach(n => { if (!workTypes.includes(n)) workTypes.push(n); });
+}
+
 function getStorageKey(dateStr) { return `zottola_hours_${dateStr}`; }
 function loadDataForDate(dateStr) { data = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {}; }
+
+// Shared spinner control used by Add New Entry and Summary cell editing.
+// Bounds: 0-12 hours, 0.5 increments.
+function spinnerStep(inputId, delta) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  let v = (parseFloat(inp.value) || 0) + delta;
+  v = Math.min(12, Math.max(0, Math.round(v * 2) / 2));
+  inp.value = v.toFixed(2);
+}
+function spinnerClamp(inputId) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  let v = parseFloat(inp.value) || 0;
+  v = Math.min(12, Math.max(0, Math.round(v * 2) / 2));
+  inp.value = v.toFixed(2);
+}
+function spinnerFieldHTML(inputId, value) {
+  return `<div style="display:flex; align-items:center; gap:4px;">
+    <button type="button" onclick="spinnerStep('${inputId}', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+    <input type="number" id="${inputId}" min="0" max="12" step="0.5" inputmode="decimal" value="${value.toFixed(2)}" onchange="spinnerClamp('${inputId}')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+    <button type="button" onclick="spinnerStep('${inputId}', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+  </div>`;
+}
+function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 function saveData() { 
   localStorage.setItem(getStorageKey(currentDate), JSON.stringify(data));
   backupData();
@@ -446,8 +505,6 @@ function onAddProjChange() {
   const addPwBadge = document.getElementById('addPwBadge');
   if (proj && isPrevailingWageProject(proj)) {
     addPwBadge.style.display = 'block';
-    // Auto-check the prevailing wage checkbox if this is a PW project
-    document.getElementById('addPrevailingWage').checked = true;
   } else {
     addPwBadge.style.display = 'none';
   }
@@ -470,6 +527,13 @@ function getDateRange(startDate) {
   return dates;
 }
 
+function formatDateWithDay(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const md = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+  return `${dayName} ${md}`;
+}
+
 function updateWeekView() {
   const dateStr = document.getElementById('weekViewDate').value || currentDate;
   const mondayDate = getMondayOfWeek(dateStr);
@@ -479,21 +543,20 @@ function updateWeekView() {
   
   const empTotals = {};
   
-  // Calculate totals for each employee for the week
-  weekDates.forEach(dateStr => {
-    const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-    employees.forEach(e => {
-      let empTotal = 0;
-      projects.forEach(p => {
-        workTypes.forEach(w => {
-          types.forEach(t => {
-            empTotal += dayData[`${e}|${p}|${t}|${w}|`] || 0;
-          });
-        });
-      });
-      if (empTotal > 0) {
-        empTotals[e] = (empTotals[e] || 0) + empTotal;
-      }
+  // Scan actual stored keys rather than reconstructing them — reconstructing
+  // assumed every entry had an empty category and only 4 hour types, which
+  // silently dropped any entry with a category set and ALL prevailing-wage
+  // hours (OnsiteP wasn't in the reconstructed type list at all). An
+  // employee whose every entry happened to have a category would end up
+  // with a total of 0 and be left off the list entirely.
+  weekDates.forEach(dStr => {
+    const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
+    Object.entries(dayData).forEach(([dataKey, hours]) => {
+      if (!hours || hours <= 0) return;
+      const parts = dataKey.split('|');
+      if (parts.length < 4) return;
+      const emp = parts[0];
+      empTotals[emp] = (empTotals[emp] || 0) + hours;
     });
   });
   
@@ -505,12 +568,13 @@ function updateWeekView() {
     html += `<div style="padding: 1rem; text-align: center; color: #999;">No hours tracked this week</div>`;
   } else {
     html += `<div style="background: #f9f9f9; border-radius: 4px; padding: 0;">`;
-    employees.forEach(e => {
-      if (empTotals[e]) {
-        const hours = empTotals[e];
-        grandTotal += hours;
-        html += `<div style="display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e0e0e0;"><span style="font-weight: 500;">${e}</span><span style="font-weight: 600; color: #2196F3;">${hours.toFixed(2)}h</span></div>`;
-      }
+    // Sorted from the actual data, not the known employees list — a removed
+    // temp employee (or anyone else no longer in that list) still has their
+    // already-logged hours shown here rather than silently hidden.
+    Object.keys(empTotals).sort().forEach(e => {
+      const hours = empTotals[e];
+      grandTotal += hours;
+      html += `<div style="display: flex; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e0e0e0;"><span style="font-weight: 500;">${e}</span><span style="font-weight: 600; color: #2196F3;">${hours.toFixed(2)}h</span></div>`;
     });
     html += `</div>`;
     html += `<div class="week-total"><span>WEEK TOTAL</span><span>${grandTotal.toFixed(2)}h</span></div>`;
@@ -520,101 +584,6 @@ function updateWeekView() {
   document.getElementById('weekViewDate').value = dateStr;
 }
 
-function loadCorrectionsForDate() {
-  const dateStr = document.getElementById('correctionsDate').value;
-  if (!dateStr) {
-    document.getElementById('correctionsContent').innerHTML = '';
-    return;
-  }
-  
-  const storageKey = getStorageKey(dateStr);
-  const dayData = JSON.parse(localStorage.getItem(storageKey)) || {};
-  const con = document.getElementById('correctionsContent');
-  
-  console.log('Corrections - Date:', dateStr, 'Storage Key:', storageKey, 'Data:', dayData);
-  
-  if (Object.keys(dayData).length === 0) {
-    con.innerHTML = '<p style="color: #999; text-align: center; margin-top: 2rem;">No entries for this date</p>';
-    return;
-  }
-  
-  let html = '<div style="margin-top: 1rem;">';
-  
-  // Group by employee
-  const byEmployee = {};
-  Object.keys(dayData).forEach(key => {
-    const [emp, proj, type, wt] = key.split('|');
-    if (!byEmployee[emp]) byEmployee[emp] = [];
-    byEmployee[emp].push({ emp, proj, type, wt, hours: dayData[key], key });
-  });
-  
-  // Display by employee
-  Object.keys(byEmployee).sort().forEach(emp => {
-    html += `<div style="background: #f5f5f5; padding: 12px; margin-bottom: 12px; border-radius: 4px;">`;
-    html += `<p style="margin: 0 0 12px; font-weight: 600; font-size: 14px;">${emp}</p>`;
-    
-    byEmployee[emp].forEach((entry, idx) => {
-      const entryId = `entry_${emp}_${idx}`;
-      html += `
-<div style="background: white; padding: 12px; margin-bottom: 8px; border-radius: 3px; border-left: 3px solid #2196F3;">
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
-    <div>
-      <label style="font-size: 11px; color: #666; text-transform: uppercase;">Project</label>
-      <select id="${entryId}_proj" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px;">
-        ${projects.map(p => `<option value="${p}" ${p === entry.proj ? 'selected' : ''}>${p}</option>`).join('')}
-      </select>
-    </div>
-    <div>
-      <label style="font-size: 11px; color: #666; text-transform: uppercase;">Work Type</label>
-      <select id="${entryId}_wt" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px;">
-        ${workTypes.map(w => `<option value="${w}" ${w === entry.wt ? 'selected' : ''}>${w}</option>`).join('')}
-      </select>
-    </div>
-  </div>
-  
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
-    <div>
-      <label style="font-size: 11px; color: #666; text-transform: uppercase;">Category</label>
-      <input type="text" id="${entryId}_cat" placeholder="e.g., Rework, Rush" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box;" value="">
-    </div>
-    <div>
-      <label style="font-size: 11px; color: #666; text-transform: uppercase;">${entry.type} Hours</label>
-      <input type="number" id="${entryId}_hrs" step="0.25" min="0" style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box;" value="${parseFloat(entry.hours).toFixed(2)}">
-    </div>
-  </div>
-  
-  <button onclick="saveCorrection(&quot;${emp}&quot;, &quot;${entry.proj}&quot;, &quot;${entry.type}&quot;, &quot;${entry.wt}&quot;, &quot;${entryId}&quot;, &quot;${dateStr}&quot;)" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; font-weight: 600; font-size: 12px;">Save Correction</button>
-</div>
-      `;
-    });
-    
-    html += '</div>';
-  });
-  
-  html += '</div>';
-  con.innerHTML = html;
-}
-
-function saveCorrection(oldEmp, oldProj, oldType, oldWt, entryId, dateStr) {
-  const newProj = document.getElementById(entryId + '_proj').value;
-  const newWt = document.getElementById(entryId + '_wt').value;
-  const newHours = parseFloat(document.getElementById(entryId + '_hrs').value) || 0;
-  
-  const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-  
-  // Remove old entry
-  delete dayData[`${oldEmp}|${oldProj}|${oldType}|${oldWt}|`];
-  
-  // Add new entry
-  dayData[`${oldEmp}|${newProj}|${oldType}|${newWt}|`] = newHours;
-  
-  // Save
-  localStorage.setItem(getStorageKey(dateStr), JSON.stringify(dayData));
-  backupData();
-  
-  alert('✓ Correction saved!');
-  loadCorrectionsForDate();
-}
 
 // Cloud sync from Google Sheets via proxy
 async function syncFromGoogleSheets() {
@@ -626,6 +595,7 @@ async function syncFromGoogleSheets() {
     const projectsJson = await projectsResponse.json();
     if (projectsJson.success && projectsJson.data.length > 0) {
       localStorage.setItem('zottola_projects', JSON.stringify(projectsJson.data));
+      projects = projectsJson.data.slice(); // keep the in-memory list in sync too, not just localStorage
     }
     
     // Fetch Work Types
@@ -633,6 +603,7 @@ async function syncFromGoogleSheets() {
     const workTypesJson = await workTypesResponse.json();
     if (workTypesJson.success && workTypesJson.data.length > 0) {
       localStorage.setItem('zottola_workTypes', JSON.stringify(workTypesJson.data));
+      workTypes = workTypesJson.data.slice();
     }
     
     // Fetch PW Projects
@@ -643,25 +614,89 @@ async function syncFromGoogleSheets() {
     }
     
     console.log('✓ Cloud sync successful (including PW projects)');
+    localStorage.setItem('zottola_lastSyncStatus', JSON.stringify({
+      ok: true,
+      time: new Date().toISOString(),
+      projectCount: projects.length,
+      workTypeCount: workTypes.length,
+      pwCount: (pwJson.success ? pwJson.data.length : loadPWProjects().length)
+    }));
   } catch (err) {
     console.log('Cloud sync failed (offline or access issue) — using local data', err);
+    localStorage.setItem('zottola_lastSyncStatus', JSON.stringify({
+      ok: false,
+      time: new Date().toISOString(),
+      error: String(err && err.message || err)
+    }));
+  }
+  updateSyncStatusDisplay();
+}
+
+// Makes the Admin tab's sync status fields reflect what actually happened,
+// instead of the static "0" / "On app startup" placeholders that were never
+// wired up to anything.
+function updateSyncStatusDisplay() {
+  const status = JSON.parse(localStorage.getItem('zottola_lastSyncStatus') || 'null');
+  const timeEl = document.getElementById('lastSyncTime');
+  const projEl = document.getElementById('syncedProjectCount');
+  const wtEl = document.getElementById('syncedWorkTypeCount');
+  const pwEl = document.getElementById('syncedPWCount');
+  if (!timeEl) return;
+
+  if (!status) {
+    timeEl.textContent = 'Never';
+    return;
+  }
+  const when = new Date(status.time).toLocaleString();
+  if (status.ok) {
+    timeEl.textContent = `${when} ✓`;
+    timeEl.style.color = '#2e7d32';
+    if (projEl) projEl.textContent = status.projectCount;
+    if (wtEl) wtEl.textContent = status.workTypeCount;
+    if (pwEl) pwEl.textContent = status.pwCount;
+  } else {
+    timeEl.textContent = `${when} — FAILED (${status.error})`;
+    timeEl.style.color = '#c62828';
   }
 }
 
 async function init() {
   await syncFromGoogleSheets();
+  applyTempEntries();
   renderSelects();
-  renderQuickButtons();
-  renderManualInputs();
-  updateProjectList();
-  updateWorkTypeList();
+  updateSettingsCounts();
   renderPWProjectList();
-  loadState();
-  setCurrentDate(new Date().toISOString().split('T')[0]);
+  renderTempEntriesList();
   document.getElementById('weekDate').value = currentDate;
   createDailyBackupIfNeeded();
   updateBackupDisplay();
+  initSummaryDate();
   updateSummaryView();
+}
+
+// The Admin tab's local project/work-type list UI (projectList/workTypeList
+// elements) was removed when that tab was redesigned to point people at the
+// Google Sheet instead. updateProjectList()/updateWorkTypeList() still tried
+// to write into those now-missing elements, throwing on every page load and
+// silently killing init() before it ever reached updateSummaryView() or
+// initSummaryDate(). This replacement only touches the counts that still
+// exist on the Settings tab.
+function updateSettingsCounts() {
+  const spEl = document.getElementById('settingsProjects');
+  const swEl = document.getElementById('settingsWorkTypes');
+  if (spEl) spEl.textContent = projects.length;
+  if (swEl) swEl.textContent = workTypes.length;
+}
+
+function saveSummaryDatePref() {
+  const val = document.getElementById('summaryDate').value;
+  if (val) localStorage.setItem('zottola_summaryDate', val);
+}
+
+function initSummaryDate() {
+  const saved = localStorage.getItem('zottola_summaryDate');
+  const defaultMonday = getMondayOfWeek(new Date().toISOString().split('T')[0]);
+  document.getElementById('summaryDate').value = saved || defaultMonday;
 }
 
 function saveEntry() {
@@ -686,7 +721,7 @@ function saveEntry() {
     if (hours > 0) {
       // Auto-apply OnsiteP for onsite hours on PW projects
       const hourType = (isPW && t === 'Onsite') ? 'OnsiteP' : t;
-      const key = `${emp}|${proj}|${hourType}|${wt}|`;
+      const key = `${emp}|${proj}|${hourType}|${wt}|${cat}`;
       data[key] = hours;
       totalHours += hours;
     }
@@ -732,9 +767,8 @@ function loadState() {
 }
 
 function renderSelects() {
-  document.getElementById('proj').innerHTML = '<option></option>' + projects.map(p => `<option>${p}</option>`).join('');
-  document.getElementById('workType').innerHTML = '<option></option>' + workTypes.map(w => `<option>${w}</option>`).join('');
-  document.getElementById('summaryEmp').innerHTML = employees.map(e => `<option>${e}</option>`).join('');
+  const tempEmp = loadTempList('zottola_tempEmployees');
+  document.getElementById('summaryEmp').innerHTML = employees.map(e => `<option value="${escAttr(e)}">${e}${tempEmp.includes(e) ? ' (temp)' : ''}</option>`).join('');
 }
 
 function renderQuickButtons() {
@@ -792,7 +826,8 @@ function updateSummary() {
 }
 
 // Track changes for Summary tab
-let summaryChanges = {}; // {uniqueKey: newValue}
+let pendingRowChanges = {}; // {rowKey: {date,emp,oldProj,oldWt,oldCat,newProj,newWt,newCat,hours}} - staged edits (yellow)
+let pendingDeletions = {}; // {rowKey: {date,emp,proj,wt,cat}} - staged deletions (red)
 
 function showAddEntryForm() {
   document.getElementById('addEntryForm').style.display = 'block';
@@ -820,15 +855,16 @@ function hideAddEntryForm() {
   document.getElementById('addShop').value = '0';
   document.getElementById('addTravel').value = '0';
   document.getElementById('addOnsite').value = '0';
-  document.getElementById('addPrevailingWage').checked = false;
 }
 
 function populateAddEntryDropdowns() {
+  const tempProj = loadTempList('zottola_tempProjects');
+  const tempWt = loadTempList('zottola_tempWorkTypes');
   const projSel = document.getElementById('addProj');
-  projSel.innerHTML = '<option value="">Select Project</option>' + projects.map(p => `<option value="${p}">${p}</option>`).join('');
+  projSel.innerHTML = '<option value="">Select Project</option>' + projects.map(p => `<option value="${escAttr(p)}">${p}${tempProj.includes(p) ? ' (temp)' : ''}</option>`).join('');
   
   const wtSel = document.getElementById('addWorkType');
-  wtSel.innerHTML = '<option value="">Select Work Type</option>' + workTypes.map(w => `<option value="${w}">${w}</option>`).join('');
+  wtSel.innerHTML = '<option value="">Select Work Type</option>' + workTypes.map(w => `<option value="${escAttr(w)}">${w}${tempWt.includes(w) ? ' (temp)' : ''}</option>`).join('');
 }
 
 function addNewEntry() {
@@ -841,7 +877,7 @@ function addNewEntry() {
   const shop = parseFloat(document.getElementById('addShop').value) || 0;
   const travel = parseFloat(document.getElementById('addTravel').value) || 0;
   const onsite = parseFloat(document.getElementById('addOnsite').value) || 0;
-  const prevailingWage = document.getElementById('addPrevailingWage').checked;
+  const prevailingWage = isPrevailingWageProject(proj);
   
   if (!date || !emp || !proj || !wt) {
     alert('Please fill in all required fields');
@@ -869,75 +905,244 @@ function addNewEntry() {
   
   localStorage.setItem(`zottola_hours_${dateKey}`, JSON.stringify(dateData));
   hideAddEntryForm();
-  summaryChanges = {};
+  pendingRowChanges = {};
+  pendingDeletions = {};
   document.getElementById('saveChangesBtn').style.display = 'none';
   updateSummaryView();
 }
 
-function editCell(cellId) {
-  const cell = document.getElementById(cellId);
-  const currentValue = parseFloat(cell.textContent) || 0;
-  
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.min = '0';
-  input.step = '0.25';
-  input.value = currentValue.toFixed(2);
-  input.style.width = '100%';
-  input.style.padding = '4px';
-  input.style.border = '2px solid #1565c0';
-  input.style.borderRadius = '2px';
-  
-  input.onblur = () => {
-    const newValue = parseFloat(input.value) || 0;
-    summaryChanges[cellId] = newValue;
-    cell.textContent = newValue > 0 ? newValue.toFixed(2) : '—';
-    cell.style.background = '#fff3cd';
-    document.getElementById('saveChangesBtn').style.display = 'inline-block';
+// Individual hour-cell editing was removed — all edits (project, work type,
+// category, and hours) now go through the single pencil-triggered row editor
+// below, staying consistent with how project/work type/category already
+// worked.
+
+function rowKeyFor(tr) {
+  return `${tr.dataset.date}|${tr.dataset.emp}|${tr.dataset.proj}|${tr.dataset.wt}|${tr.dataset.cat}`;
+}
+
+function clampHourVal(v) {
+  let n = parseFloat(v) || 0;
+  return Math.min(12, Math.max(0, Math.round(n * 2) / 2));
+}
+
+function miniSpinnerHTML(id, value) {
+  return `<div style="display:flex; align-items:center; gap:2px; justify-content:center;">
+    <button type="button" onclick="spinnerStep('${id}', -0.5)" style="width:20px; height:20px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:12px; cursor:pointer; line-height:1;">−</button>
+    <input type="number" id="${id}" min="0" max="12" step="0.5" inputmode="decimal" value="${value.toFixed(2)}" onchange="spinnerClamp('${id}')" style="width:42px; text-align:center; padding:2px; border:1px solid #ddd; border-radius:3px; font-size:12px;">
+    <button type="button" onclick="spinnerStep('${id}', 0.5)" style="width:20px; height:20px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:12px; cursor:pointer; line-height:1;">+</button>
+  </div>`;
+}
+
+// Renders the ✎ / 🗑 buttons into a row's Actions cell (the normal, non-editing state).
+function renderRowActions(tr) {
+  const cells = tr.children;
+  const actionsCell = cells[cells.length - 1];
+  actionsCell.innerHTML = '';
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.textContent = '✎';
+  editBtn.title = 'Edit this entry (project, work type, remarks, hours)';
+  editBtn.style.cssText = 'width:26px; height:26px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer; margin-right:4px;';
+  editBtn.addEventListener('click', () => editRow(tr));
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.textContent = '🗑';
+  delBtn.title = 'Delete this entry';
+  delBtn.style.cssText = 'width:26px; height:26px; border:1px solid #e57373; border-radius:4px; background:#fff; color:#c62828; cursor:pointer;';
+  delBtn.addEventListener('click', () => stageDeleteRow(tr));
+
+  actionsCell.appendChild(editBtn);
+  actionsCell.appendChild(delBtn);
+}
+
+// Paints a row's display cells (Project/WorkType/Category/hours/Total) from
+// a given {proj, wt, cat, hours} state, without touching Actions or background.
+function paintRowCells(tr, proj, wt, cat, hours) {
+  const cells = tr.children;
+  const total = hours.Office + hours.Shop + hours.Travel + hours.Onsite + hours.OnsiteP;
+  cells[1].textContent = proj;
+  cells[2].textContent = wt;
+  cells[3].textContent = cat || '—';
+  cells[4].textContent = hours.Office > 0 ? hours.Office.toFixed(2) : '—';
+  cells[5].textContent = hours.Shop > 0 ? hours.Shop.toFixed(2) : '—';
+  cells[6].textContent = hours.Travel > 0 ? hours.Travel.toFixed(2) : '—';
+  cells[7].textContent = hours.Onsite > 0 ? hours.Onsite.toFixed(2) : '—';
+  cells[8].textContent = hours.OnsiteP > 0 ? hours.OnsiteP.toFixed(2) : '—';
+  cells[9].textContent = total.toFixed(2);
+}
+
+function originalHoursOf(tr) {
+  return {
+    Office: parseFloat(tr.dataset.office) || 0,
+    Shop: parseFloat(tr.dataset.shop) || 0,
+    Travel: parseFloat(tr.dataset.travel) || 0,
+    Onsite: parseFloat(tr.dataset.onsite) || 0,
+    OnsiteP: parseFloat(tr.dataset.onsitep) || 0
   };
-  
-  input.onkeypress = (e) => {
-    if (e.key === 'Enter') {
-      const newValue = parseFloat(input.value) || 0;
-      summaryChanges[cellId] = newValue;
-      cell.textContent = newValue > 0 ? newValue.toFixed(2) : '—';
-      cell.style.background = '#fff3cd';
-      document.getElementById('saveChangesBtn').style.display = 'inline-block';
-    }
+}
+
+// Repaints a row to reflect whatever pending state (if any) currently
+// applies to it — staged edit (yellow), staged deletion (red), or its true
+// original values — without re-rendering the rest of the table. Used by
+// cancel/undo so other rows' pending changes are left untouched.
+function renderRowFromState(tr) {
+  const key = rowKeyFor(tr);
+  const cells = tr.children;
+
+  if (pendingDeletions[key]) {
+    paintRowCells(tr, tr.dataset.proj, tr.dataset.wt, tr.dataset.cat, originalHoursOf(tr));
+    tr.style.background = '#fdecea';
+    for (let i = 1; i <= 9; i++) cells[i].style.background = '';
+    renderDeletedRowActions(tr);
+    return;
+  }
+
+  if (pendingRowChanges[key]) {
+    const p = pendingRowChanges[key];
+    paintRowCells(tr, p.newProj, p.newWt, p.newCat, p.hours);
+    tr.style.background = '#fff3cd';
+    renderRowActions(tr);
+    return;
+  }
+
+  paintRowCells(tr, tr.dataset.proj, tr.dataset.wt, tr.dataset.cat, originalHoursOf(tr));
+  tr.style.background = '';
+  renderRowActions(tr);
+}
+
+function renderDeletedRowActions(tr) {
+  const cells = tr.children;
+  const actionsCell = cells[cells.length - 1];
+  actionsCell.innerHTML = '';
+  const undoBtn = document.createElement('button');
+  undoBtn.type = 'button';
+  undoBtn.textContent = 'Undo';
+  undoBtn.title = 'Undo delete';
+  undoBtn.style.cssText = 'padding:4px 10px; border:1px solid #c62828; border-radius:4px; background:#fff; color:#c62828; cursor:pointer; font-size:12px; font-weight:600;';
+  undoBtn.addEventListener('click', () => {
+    delete pendingDeletions[rowKeyFor(tr)];
+    renderRowFromState(tr);
+    updateSaveChangesVisibility();
+  });
+  actionsCell.appendChild(undoBtn);
+}
+
+function updateSaveChangesVisibility() {
+  const anyPending = Object.keys(pendingRowChanges).length > 0 || Object.keys(pendingDeletions).length > 0;
+  document.getElementById('saveChangesBtn').style.display = anyPending ? 'inline-block' : 'none';
+}
+
+// Single pencil-triggered editor for the WHOLE row: project, work type,
+// category, and every hour field together — no separate per-cell editing.
+function editRow(tr) {
+  const key = rowKeyFor(tr);
+  const pending = pendingRowChanges[key];
+  const proj = pending ? pending.newProj : tr.dataset.proj;
+  const wt = pending ? pending.newWt : tr.dataset.wt;
+  const cat = pending ? pending.newCat : tr.dataset.cat;
+  const hours = pending ? pending.hours : originalHoursOf(tr);
+
+  const cells = tr.children; // 0=Date 1=Project 2=WorkType 3=Category 4-8=hours 9=Total 10=Actions
+
+  const tempProj = loadTempList('zottola_tempProjects');
+  const tempWt = loadTempList('zottola_tempWorkTypes');
+  cells[1].innerHTML = `<select id="rowEditProj" style="width:100%; padding:4px; font-size:12px;">${projects.map(p => `<option value="${escAttr(p)}" ${p === proj ? 'selected' : ''}>${p}${tempProj.includes(p) ? ' (temp)' : ''}</option>`).join('')}</select>`;
+  cells[2].innerHTML = `<select id="rowEditWt" style="width:100%; padding:4px; font-size:12px;">${workTypes.map(w => `<option value="${escAttr(w)}" ${w === wt ? 'selected' : ''}>${w}${tempWt.includes(w) ? ' (temp)' : ''}</option>`).join('')}</select>`;
+  cells[3].innerHTML = `<input type="text" id="rowEditCat" value="${escAttr(cat)}" placeholder="e.g., Rework" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box;">`;
+  cells[4].innerHTML = miniSpinnerHTML('rowEditOffice', hours.Office);
+  cells[5].innerHTML = miniSpinnerHTML('rowEditShop', hours.Shop);
+  cells[6].innerHTML = miniSpinnerHTML('rowEditTravel', hours.Travel);
+  cells[7].innerHTML = miniSpinnerHTML('rowEditOnsite', hours.Onsite);
+  cells[8].innerHTML = miniSpinnerHTML('rowEditOnsiteP', hours.OnsiteP);
+  tr.style.background = '#e3f2fd';
+
+  const actionsCell = cells[cells.length - 1];
+  actionsCell.innerHTML = '';
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.textContent = '✓';
+  saveBtn.title = 'Stage this change (still requires Save Changes below to persist)';
+  saveBtn.style.cssText = 'width:26px; height:26px; border:none; border-radius:4px; background:#2e7d32; color:#fff; cursor:pointer; margin-right:4px;';
+  saveBtn.addEventListener('click', () => stageRowEdit(tr));
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.textContent = '✕';
+  cancelBtn.title = 'Cancel';
+  cancelBtn.style.cssText = 'width:26px; height:26px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer;';
+  cancelBtn.addEventListener('click', () => renderRowFromState(tr));
+
+  actionsCell.appendChild(saveBtn);
+  actionsCell.appendChild(cancelBtn);
+}
+
+// Stages everything (project, work type, category, hours) as one unit — the
+// whole row turns yellow, nothing is written until "Save Changes" is clicked.
+function stageRowEdit(tr) {
+  const date = tr.dataset.date, emp = tr.dataset.emp;
+  const oldProj = tr.dataset.proj, oldWt = tr.dataset.wt, oldCat = tr.dataset.cat;
+  const newProj = document.getElementById('rowEditProj').value;
+  const newWt = document.getElementById('rowEditWt').value;
+  const newCat = document.getElementById('rowEditCat').value || '';
+  const hours = {
+    Office: clampHourVal(document.getElementById('rowEditOffice').value),
+    Shop: clampHourVal(document.getElementById('rowEditShop').value),
+    Travel: clampHourVal(document.getElementById('rowEditTravel').value),
+    Onsite: clampHourVal(document.getElementById('rowEditOnsite').value),
+    OnsiteP: clampHourVal(document.getElementById('rowEditOnsiteP').value)
   };
-  
-  cell.innerHTML = '';
-  cell.appendChild(input);
-  input.focus();
-  input.select();
+
+  const key = rowKeyFor(tr); // always keyed off the true original, not any prior staged value
+  pendingRowChanges[key] = { date, emp, oldProj, oldWt, oldCat, newProj, newWt, newCat, hours };
+  delete pendingDeletions[key];
+
+  renderRowFromState(tr);
+  updateSaveChangesVisibility();
+}
+
+// Stages a delete: whole row turns red, Actions collapses to a single Undo
+// button, and nothing is removed from storage until Save Changes is clicked.
+function stageDeleteRow(tr) {
+  const key = rowKeyFor(tr);
+  delete pendingRowChanges[key];
+  pendingDeletions[key] = { date: tr.dataset.date, emp: tr.dataset.emp, proj: tr.dataset.proj, wt: tr.dataset.wt, cat: tr.dataset.cat };
+  renderRowFromState(tr);
+  updateSaveChangesVisibility();
 }
 
 function saveAllChanges() {
-  if (Object.keys(summaryChanges).length === 0) return;
-  
-  // Parse cellIds and update localStorage
-  for (const [cellId, newValue] of Object.entries(summaryChanges)) {
-    const parts = cellId.split('|');
-    const dateStr = parts[0];
-    const emp = parts[1];
-    const proj = parts[2];
-    const hourType = parts[3];
-    const workType = parts[4];
-    const category = parts[5] || '';
-    
-    const dateData = JSON.parse(localStorage.getItem(`zottola_hours_${dateStr}`)) || {};
-    const dataKey = `${emp}|${proj}|${hourType}|${workType}|${category}`;
-    
-    if (newValue > 0) {
-      dateData[dataKey] = newValue;
-    } else {
-      delete dateData[dataKey];
-    }
-    
-    localStorage.setItem(`zottola_hours_${dateStr}`, JSON.stringify(dateData));
+  const hasRowChanges = Object.keys(pendingRowChanges).length > 0;
+  const hasDeletions = Object.keys(pendingDeletions).length > 0;
+  if (!hasRowChanges && !hasDeletions) return;
+
+  // Edits: project/work type/category/hours all change together.
+  for (const { date, emp, oldProj, oldWt, oldCat, newProj, newWt, newCat, hours } of Object.values(pendingRowChanges)) {
+    const dayData = JSON.parse(localStorage.getItem(getStorageKey(date))) || {};
+    ['Office', 'Shop', 'Travel', 'Onsite', 'OnsiteP'].forEach(ht => {
+      delete dayData[`${emp}|${oldProj}|${ht}|${oldWt}|${oldCat}`];
+    });
+    Object.entries(hours).forEach(([ht, val]) => {
+      if (val > 0) {
+        const newKey = `${emp}|${newProj}|${ht}|${newWt}|${newCat}`;
+        dayData[newKey] = (dayData[newKey] || 0) + val;
+      }
+    });
+    localStorage.setItem(getStorageKey(date), JSON.stringify(dayData));
   }
-  
-  summaryChanges = {};
+
+  // Deletions.
+  for (const { date, emp, proj, wt, cat } of Object.values(pendingDeletions)) {
+    const dayData = JSON.parse(localStorage.getItem(getStorageKey(date))) || {};
+    ['Office', 'Shop', 'Travel', 'Onsite', 'OnsiteP'].forEach(ht => {
+      delete dayData[`${emp}|${proj}|${ht}|${wt}|${cat}`];
+    });
+    localStorage.setItem(getStorageKey(date), JSON.stringify(dayData));
+  }
+
+  backupData();
+  pendingRowChanges = {};
+  pendingDeletions = {};
   document.getElementById('saveChangesBtn').style.display = 'none';
   updateSummaryView();
 }
@@ -957,6 +1162,13 @@ function updateSummaryView() {
   const mondayDate = new Date(mondayStr + 'T00:00:00');
   const saturdayDate = new Date(mondayDate);
   saturdayDate.setDate(saturdayDate.getDate() + 5);
+  
+  const rangeLabelEl = document.getElementById('summaryWeekRangeLabel');
+  if (rangeLabelEl) {
+    const mondayLabel = mondayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    const saturdayLabel = saturdayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    rangeLabelEl.textContent = `${mondayLabel} – ${saturdayLabel}`;
+  }
   
   const weekDates = [];
   for (let i = 0; i < 6; i++) {
@@ -1022,19 +1234,20 @@ function updateSummaryView() {
             <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Date</th>
             <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Project</th>
             <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Work Type</th>
-            <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Category</th>
+            <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd;">Remarks</th>
             <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd; cursor: pointer;">Office</th>
             <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd; cursor: pointer;">Shop</th>
             <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd; cursor: pointer;">Travel</th>
             <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd; cursor: pointer;">Onsite (Reg)</th>
             <th style="padding: 8px; text-align: right; border-right: 1px solid #ddd; cursor: pointer;">Onsite (PW)</th>
             <th style="padding: 8px; text-align: right; font-weight: 600;">Total</th>
+            <th style="padding: 8px; text-align: center; font-weight: 600;">Actions</th>
           </tr>
         </thead>
         <tbody>`;
     
     const dates = Object.keys(empData[emp]).sort();
-    let empOfficeTotal = 0, empShopTotal = 0, empTravelTotal = 0, empOnsiteTotal = 0;
+    let empOfficeTotal = 0, empShopTotal = 0, empTravelTotal = 0, empOnsiteRegTotal = 0, empOnsitePWTotal = 0;
     
     dates.forEach(date => {
       const projects = Object.keys(empData[emp][date]).sort();
@@ -1048,26 +1261,24 @@ function updateSummaryView() {
             empOfficeTotal += catData.office;
             empShopTotal += catData.shop;
             empTravelTotal += catData.travel;
-            empOnsiteTotal += catData.onsite;
-            empOnsiteTotal += catData.onsiteP;
+            empOnsiteRegTotal += catData.onsite;
+            empOnsitePWTotal += catData.onsiteP;
             
-            const cellOfficeId = `${date}|${emp}|${proj}|Office|${workType}|${cat}`;
-            const cellShopId = `${date}|${emp}|${proj}|Shop|${workType}|${cat}`;
-            const cellTravelId = `${date}|${emp}|${proj}|Travel|${workType}|${cat}`;
-            const cellOnsiteId = `${date}|${emp}|${proj}|Onsite|${workType}|${cat}`;
-            const cellOnsitePId = `${date}|${emp}|${proj}|OnsiteP|${workType}|${cat}`;
-            
-            empHtml += `<tr style="border-bottom: 1px solid #e0e0e0;">
-              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${date}</td>
+            empHtml += `<tr data-date="${escAttr(date)}" data-emp="${escAttr(emp)}" data-proj="${escAttr(proj)}" data-wt="${escAttr(workType)}" data-cat="${escAttr(cat)}" data-office="${catData.office}" data-shop="${catData.shop}" data-travel="${catData.travel}" data-onsite="${catData.onsite}" data-onsitep="${catData.onsiteP}" style="border-bottom: 1px solid #e0e0e0;">
+              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${formatDateWithDay(date)}</td>
               <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${proj}</td>
               <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${workType}</td>
               <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${cat || '—'}</td>
-              <td id="${cellOfficeId}" style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0; cursor: pointer; user-select: none;" onclick="editCell('${cellOfficeId}')">${catData.office > 0 ? catData.office.toFixed(2) : '—'}</td>
-              <td id="${cellShopId}" style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0; cursor: pointer; user-select: none;" onclick="editCell('${cellShopId}')">${catData.shop > 0 ? catData.shop.toFixed(2) : '—'}</td>
-              <td id="${cellTravelId}" style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0; cursor: pointer; user-select: none;" onclick="editCell('${cellTravelId}')">${catData.travel > 0 ? catData.travel.toFixed(2) : '—'}</td>
-              <td id="${cellOnsiteId}" style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0; cursor: pointer; user-select: none;" onclick="editCell('${cellOnsiteId}')">${catData.onsite > 0 ? catData.onsite.toFixed(2) : '—'}</td>
-              <td id="${cellOnsitePId}" style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0; cursor: pointer; user-select: none;" onclick="editCell('${cellOnsitePId}')">${catData.onsiteP > 0 ? catData.onsiteP.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.office > 0 ? catData.office.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.shop > 0 ? catData.shop.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.travel > 0 ? catData.travel.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.onsite > 0 ? catData.onsite.toFixed(2) : '—'}</td>
+              <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.onsiteP > 0 ? catData.onsiteP.toFixed(2) : '—'}</td>
               <td style="padding: 8px; text-align: right; font-weight: 600;">${rowTotal.toFixed(2)}</td>
+              <td class="rowActions" style="padding: 8px; text-align: center; white-space: nowrap;">
+                <button type="button" onclick="editRow(this.closest('tr'))" title="Edit this entry (project, work type, remarks, hours)" style="width:26px; height:26px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer; margin-right:4px;">✎</button>
+                <button type="button" onclick="stageDeleteRow(this.closest('tr'))" title="Delete this entry" style="width:26px; height:26px; border:1px solid #e57373; border-radius:4px; background:#fff; color:#c62828; cursor:pointer;">🗑</button>
+              </td>
             </tr>`;
           });
         });
@@ -1075,30 +1286,34 @@ function updateSummaryView() {
     });
     
     // Summary row
-    const empNonOnsiteTotal = empOfficeTotal + empShopTotal + empTravelTotal;
-    const empGrandTotal = empNonOnsiteTotal + empOnsiteTotal;
+    const empCombined = empOfficeTotal + empShopTotal + empTravelTotal;
+    const empGrandTotal = empCombined + empOnsiteRegTotal + empOnsitePWTotal;
     empHtml += `<tr style="background: #e3f2fd; font-weight: 600; border-top: 2px solid #1565c0;">
       <td colspan="4" style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">WEEKLY TOTALS</td>
       <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOfficeTotal.toFixed(2)}</td>
       <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empShopTotal.toFixed(2)}</td>
       <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empTravelTotal.toFixed(2)}</td>
-      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;" colspan="2">${empOnsiteTotal.toFixed(2)}</td>
+      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsiteRegTotal.toFixed(2)}</td>
+      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsitePWTotal.toFixed(2)}</td>
       <td style="padding: 10px; text-align: right;">${empGrandTotal.toFixed(2)}</td>
+      <td></td>
     </tr>`;
     
     empHtml += `</tbody></table></div>`;
     
-    // Add combined totals note - separate lines, WEEK TOTAL larger
-    const combinedNonOnsite = empOfficeTotal + empShopTotal + empTravelTotal;
+    // Combined = Office + Shop + Travel. Onsite Regular and Prevailing Wage are their own lines.
     empHtml += `<div style="background: #f9f9f9; padding: 16px; border-radius: 4px; color: #333;">
-      <div style="font-size: 13px; margin-bottom: 12px;"><strong>Combined (Office + Shop + Travel + Onsite):</strong> ${(combinedNonOnsite + empOnsiteTotal).toFixed(2)}h</div>
-      <div style="font-size: 18px; font-weight: bold; color: #1565c0;"><strong>WEEK TOTAL: ${(combinedNonOnsite + empOnsiteTotal).toFixed(2)}h</strong></div>
+      <div style="font-size: 13px; margin-bottom: 8px;"><strong>Combined (Office + Shop + Travel):</strong> ${empCombined.toFixed(2)}h</div>
+      <div style="font-size: 13px; margin-bottom: 8px;"><strong>Onsite (Regular):</strong> ${empOnsiteRegTotal.toFixed(2)}h</div>
+      <div style="font-size: 13px; margin-bottom: 12px; ${empOnsitePWTotal > 0 ? 'color: #c62828;' : ''}"><strong>Prevailing Wage Hours:</strong> ${empOnsitePWTotal.toFixed(2)}h</div>
+      <div style="font-size: 18px; font-weight: bold; color: #1565c0;"><strong>WEEK TOTAL: ${empGrandTotal.toFixed(2)}h</strong></div>
     </div></div>`;
     
     con.innerHTML += empHtml;
   });
   
-  summaryChanges = {};
+  pendingRowChanges = {};
+  pendingDeletions = {};
   document.getElementById('saveChangesBtn').style.display = 'none';
 }
 
@@ -1113,7 +1328,7 @@ function updateWeekExportPreview() {
 }
 
 function exportCSV() {
-  let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
+  let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
   employees.forEach(e => {
     projects.forEach(p => {
       workTypes.forEach(w => {
@@ -1131,6 +1346,44 @@ function exportCSV() {
   downloadCSV(csv, `zottola_hours_${currentDate}.csv`);
 }
 
+function csvField(v) {
+  const s = String(v == null ? '' : v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+// Groups a day's raw hour entries by employee/project/work type/category so
+// every hour type — including prevailing wage — lands on one CSV row. The
+// export functions used to reconstruct keys assuming an empty category and
+// only 4 hour types, which silently dropped any entry with a category and
+// ALL prevailing-wage hours from every export.
+function groupDayDataForCSV(dayData) {
+  const rows = {};
+  Object.entries(dayData).forEach(([dataKey, hours]) => {
+    if (!hours || hours <= 0) return;
+    const parts = dataKey.split('|');
+    if (parts.length < 4) return;
+    const [emp, proj, hourType, workType] = parts;
+    const category = parts[4] || '';
+    const rowKey = `${emp}|${proj}|${workType}|${category}`;
+    if (!rows[rowKey]) rows[rowKey] = { emp, proj, workType, category, Office: 0, Shop: 0, Travel: 0, Onsite: 0, OnsiteP: 0 };
+    const field = (hourType === 'OnsiteP') ? 'OnsiteP' : hourType;
+    if (rows[rowKey][field] !== undefined) rows[rowKey][field] += hours;
+  });
+  return Object.values(rows);
+}
+
+function csvRowsForDate(dateStr, dayData) {
+  let out = '';
+  groupDayDataForCSV(dayData).forEach(r => {
+    const total = r.Office + r.Shop + r.Travel + r.Onsite + r.OnsiteP;
+    out += `${dateStr},${csvField(r.emp)},${csvField(r.proj)},${csvField(r.workType)},${csvField(r.category)},${r.Office.toFixed(2)},${r.Shop.toFixed(2)},${r.Travel.toFixed(2)},${r.Onsite.toFixed(2)},${r.OnsiteP.toFixed(2)},${total.toFixed(2)}\n`;
+  });
+  return out;
+}
+
 function exportFullWeek() {
   try {
     const dateStr = document.getElementById('weekDate').value;
@@ -1141,24 +1394,11 @@ function exportFullWeek() {
     
     const mondayDate = getMondayOfWeek(dateStr);
     const weekDates = getDateRange(mondayDate);
-    let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
     
-    weekDates.forEach(dateStr => {
-      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-      employees.forEach(e => {
-        projects.forEach(p => {
-          workTypes.forEach(w => {
-            let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
-            types.forEach(t => {
-              vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
-            });
-            let total = Object.values(vals).reduce((a, b) => a + b, 0);
-            if (total > 0) {
-              csv += `${dateStr},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
-            }
-          });
-        });
-      });
+    weekDates.forEach(dStr => {
+      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
+      csv += csvRowsForDate(dStr, dayData);
     });
     
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1186,24 +1426,11 @@ function exportPreviousWeek() {
     const prevWeekDate = d.toISOString().split('T')[0];
     const mondayDate = getMondayOfWeek(prevWeekDate);
     const weekDates = getDateRange(mondayDate);
-    let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
     
-    weekDates.forEach(dateStr => {
-      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-      employees.forEach(e => {
-        projects.forEach(p => {
-          workTypes.forEach(w => {
-            let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
-            types.forEach(t => {
-              vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
-            });
-            let total = Object.values(vals).reduce((a, b) => a + b, 0);
-            if (total > 0) {
-              csv += `${dateStr},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
-            }
-          });
-        });
-      });
+    weekDates.forEach(dStr => {
+      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
+      csv += csvRowsForDate(dStr, dayData);
     });
     
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1240,33 +1467,34 @@ function exportWeeklySummary() {
     console.log('Exporting weekly summary for week:', weekStr);
     console.log('Week dates:', weekDates);
     
-    const empTotals = {}, projTotals = {};
+    const empTotals = {}, empPWTotals = {}, projTotals = {}, projPWTotals = {};
     
-    weekDates.forEach(dateStr => {
-      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {};
-      employees.forEach(e => {
-        projects.forEach(p => {
-          workTypes.forEach(w => {
-            types.forEach(t => {
-              const hrs = dayData[`${e}|${p}|${t}|${w}|`] || 0;
-              empTotals[e] = (empTotals[e] || 0) + hrs;
-              projTotals[p] = (projTotals[p] || 0) + hrs;
-            });
-          });
-        });
+    weekDates.forEach(dStr => {
+      const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
+      Object.entries(dayData).forEach(([dataKey, hours]) => {
+        if (!hours || hours <= 0) return;
+        const parts = dataKey.split('|');
+        if (parts.length < 4) return;
+        const emp = parts[0], proj = parts[1], hourType = parts[2];
+        empTotals[emp] = (empTotals[emp] || 0) + hours;
+        projTotals[proj] = (projTotals[proj] || 0) + hours;
+        if (hourType === 'OnsiteP') {
+          empPWTotals[emp] = (empPWTotals[emp] || 0) + hours;
+          projPWTotals[proj] = (projPWTotals[proj] || 0) + hours;
+        }
       });
     });
     
-    let csv = `WEEKLY SUMMARY - Week of ${weekStr}\n\nEMPLOYEE TOTALS\nEmployee,Total Hours\n`;
-    employees.forEach(e => {
-      if (empTotals[e] && empTotals[e] > 0) {
-        csv += `${e},${empTotals[e].toFixed(2)}\n`;
+    let csv = `WEEKLY SUMMARY - Week of ${weekStr}\n\nEMPLOYEE TOTALS\nEmployee,Total Hours,Prevailing Wage Hours\n`;
+    Object.keys(empTotals).sort().forEach(e => {
+      if (empTotals[e] > 0) {
+        csv += `${csvField(e)},${empTotals[e].toFixed(2)},${(empPWTotals[e] || 0).toFixed(2)}\n`;
       }
     });
-    csv += `\nPROJECT TOTALS\nProject,Total Hours\n`;
-    projects.forEach(p => {
-      if (projTotals[p] && projTotals[p] > 0) {
-        csv += `${p},${projTotals[p].toFixed(2)}\n`;
+    csv += `\nPROJECT TOTALS\nProject,Total Hours,Prevailing Wage Hours\n`;
+    Object.keys(projTotals).sort().forEach(p => {
+      if (projTotals[p] > 0) {
+        csv += `${csvField(p)},${projTotals[p].toFixed(2)},${(projPWTotals[p] || 0).toFixed(2)}\n`;
       }
     });
     
@@ -1388,6 +1616,7 @@ function loadPWProjects() {
 function renderPWProjectList() {
   const pwProjects = loadPWProjects();
   const list = document.getElementById('pwProjectList');
+  if (!list) return; // Admin tab's local PW checklist UI was removed; PW projects are managed via the Google Sheet now.
   list.innerHTML = projects.map(p => `
     <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #e0e0e0;">
       <input type="checkbox" id="pw_${p}" ${pwProjects.includes(p) ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
@@ -1407,6 +1636,95 @@ function savePWProjects() {
   localStorage.setItem('zottola_pwProjects', JSON.stringify(pwProjects));
   alert('✓ Prevailing Wage project settings saved!');
   console.log('PW Projects:', pwProjects);
+}
+
+function addTempEmployeeUI() {
+  const inp = document.getElementById('tempEmployeeInput');
+  if (!addTempEntry('zottola_tempEmployees', employees, inp.value)) {
+    alert('That name already exists (or the field is blank).');
+    return;
+  }
+  inp.value = '';
+  renderSelects();
+  renderTempEntriesList();
+}
+
+function addTempProjectUI() {
+  const inp = document.getElementById('tempProjectInput');
+  if (!addTempEntry('zottola_tempProjects', projects, inp.value)) {
+    alert('That project already exists (or the field is blank).');
+    return;
+  }
+  inp.value = '';
+  renderTempEntriesList();
+}
+
+function addTempWorkTypeUI() {
+  const inp = document.getElementById('tempWorkTypeInput');
+  if (!addTempEntry('zottola_tempWorkTypes', workTypes, inp.value)) {
+    alert('That work type already exists (or the field is blank).');
+    return;
+  }
+  inp.value = '';
+  renderTempEntriesList();
+}
+
+function renderTempEntriesList() {
+  const el = document.getElementById('tempEntriesList');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const groups = [
+    { label: 'Employees', storageKey: 'zottola_tempEmployees', targetArray: employees },
+    { label: 'Projects', storageKey: 'zottola_tempProjects', targetArray: projects },
+    { label: 'Work Types', storageKey: 'zottola_tempWorkTypes', targetArray: workTypes }
+  ];
+
+  let anyEntries = false;
+  groups.forEach(g => {
+    const list = loadTempList(g.storageKey);
+    if (list.length === 0) return;
+    anyEntries = true;
+
+    const heading = document.createElement('p');
+    heading.style.cssText = 'font-size: 12px; font-weight: 600; margin: 10px 0 4px; color: #333;';
+    heading.textContent = g.label;
+    el.appendChild(heading);
+
+    list.forEach(name => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#fff3cd; border-radius:4px; margin-bottom:4px; font-size:13px;';
+
+      const label = document.createElement('span');
+      label.textContent = `⚠ ${name} `;
+      const note = document.createElement('span');
+      note.style.cssText = 'color:#999; font-size:11px;';
+      note.textContent = '(local only, not in the Sheet)';
+      label.appendChild(note);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove';
+      removeBtn.title = "Removes it from the pick-list only — any hours already logged under this name are kept.";
+      removeBtn.style.cssText = 'border:none; background:none; color:#c62828; cursor:pointer; font-size:12px; font-weight:600;';
+      removeBtn.addEventListener('click', () => {
+        removeTempEntry(g.storageKey, g.targetArray, name);
+        renderSelects();
+        renderTempEntriesList();
+      });
+
+      row.appendChild(label);
+      row.appendChild(removeBtn);
+      el.appendChild(row);
+    });
+  });
+
+  if (!anyEntries) {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size: 12px; color: #999;';
+    p.textContent = 'No temporary entries on this device.';
+    el.appendChild(p);
+  }
 }
 
 function isPrevailingWageProject(proj) {
@@ -1486,7 +1804,7 @@ function restoreFromBackup() {
     const dataCount = Object.keys(backup.data).length;
     
     // Show confirmation modal instead of dialog
-    document.getElementById('restoreConfirmModal').style.display = 'block';
+    document.getElementById('restoreConfirmModal').style.display = 'flex';
     document.getElementById('restoreConfirmText').textContent = 
       `Backup Date: ${backupDate}\nRecords: ${dataCount}\n\nClick CONFIRM to restore all data.`;
     
@@ -1593,7 +1911,7 @@ function proceedWithFileRestore() {
 
 function exportAllData() {
   try {
-    let csv = 'Date,Employee,Project,Work Type,Category,Office,Shop,Travel,Onsite,Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
     let recordCount = 0;
     
     // Get all localStorage keys
@@ -1604,22 +1922,11 @@ function exportAllData() {
       if (key.startsWith('zottola_hours_')) {
         const dateStr = key.replace('zottola_hours_', '');
         const dayData = JSON.parse(localStorage.getItem(key)) || {};
-        
-        // Loop through all records for this date
-        employees.forEach(e => {
-          projects.forEach(p => {
-            workTypes.forEach(w => {
-              let vals = { Office: 0, Shop: 0, Onsite: 0, Travel: 0 };
-              types.forEach(t => {
-                vals[t] = dayData[`${e}|${p}|${t}|${w}|`] || 0;
-              });
-              let total = Object.values(vals).reduce((a, b) => a + b, 0);
-              if (total > 0) {
-                csv += `${dateStr},${e},${p},${w},,${vals.Office.toFixed(2)},${vals.Shop.toFixed(2)},${vals.Travel.toFixed(2)},${vals.Onsite.toFixed(2)},${total.toFixed(2)}\n`;
-                recordCount++;
-              }
-            });
-          });
+        const rows = groupDayDataForCSV(dayData);
+        rows.forEach(r => {
+          const total = r.Office + r.Shop + r.Travel + r.Onsite + r.OnsiteP;
+          csv += `${dateStr},${csvField(r.emp)},${csvField(r.proj)},${csvField(r.workType)},${csvField(r.category)},${r.Office.toFixed(2)},${r.Shop.toFixed(2)},${r.Travel.toFixed(2)},${r.Onsite.toFixed(2)},${r.OnsiteP.toFixed(2)},${total.toFixed(2)}\n`;
+          recordCount++;
         });
       }
     }
@@ -1658,8 +1965,7 @@ function confirmRestore() {
     });
     
     loadDataForDate(currentDate);
-    renderManualInputs();
-    updateSummary();
+    updateSummaryView();
     updateBackupDisplay();
     
     document.getElementById('restoreConfirmModal').style.display = 'none';
@@ -1694,7 +2000,7 @@ function switchTab(tab, event) {
   if (tab === 'export') updateWeekExportPreview();
   if (tab === 'week') updateWeekView();
   if (tab === 'summary') updateSummaryView();
-  if (tab === 'admin') renderPWProjectList();
+  if (tab === 'admin') { renderPWProjectList(); renderTempEntriesList(); updateSyncStatusDisplay(); }
   if (tab === 'settings') updateBackupDisplay();
 }
 
