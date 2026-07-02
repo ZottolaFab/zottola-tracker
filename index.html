@@ -64,7 +64,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <button class="tab-btn" onclick="switchTab('week', event)">Week View</button>
 <button class="tab-btn" onclick="switchTab('export', event)">Export</button>
 <button class="tab-btn" onclick="switchTab('admin', event)">Admin</button>
-<button class="tab-btn" onclick="switchTab('settings', event)">Settings</button>
+<button class="tab-btn" onclick="switchTab('settings', event)">Backup</button>
 </div>
 </div>
 
@@ -140,12 +140,6 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 
 <div id="export" class="tab-content">
 <div class="export-section">
-<h3 style="margin-bottom: 1rem;">Export All Data</h3>
-<p style="font-size: 13px; color: #666; margin-bottom: 1rem;">Download complete data dump of all tracked hours (CSV format)</p>
-<button class="btn-orange" onclick="exportAllData()" style="width: 100%; margin-bottom: 1.5rem;">Export All Data to CSV</button>
-</div>
-
-<div class="export-section">
 <h3 style="margin-bottom: 1rem;">Weekly Export</h3>
 <label>Select week starting date</label>
 <input type="date" id="weekDate" onchange="updateWeekExportPreview()" style="margin-bottom: 1rem;">
@@ -155,31 +149,26 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <button class="btn-orange" onclick="exportWeeklySummary()">Weekly Summary</button>
 </div>
 </div>
+
+<div class="export-section">
+<h3 style="margin-bottom: 1rem;">Export All Data</h3>
+<p style="font-size: 13px; color: #666; margin-bottom: 1rem;">Download complete data dump of all tracked hours (CSV format)</p>
+<button class="btn-orange" onclick="exportAllData()" style="width: 100%; margin-bottom: 1.5rem;">Export All Data to CSV</button>
+</div>
 </div>
 
 <div id="admin" class="tab-content">
 
 <div class="section">
-<div class="info-box">🔗 Projects & Work Types</div>
+<div class="info-box">Employees, Projects, Prevailing Wage Projects and Work Types</div>
 <p style="font-size: 14px; color: #333; margin-bottom: 1.5rem; line-height: 1.6;">
-  <strong>All projects and work types are managed through the Google Sheet.</strong><br><br>
-  To add or modify projects and work types for the team, go to:<br>
-  <strong style="color: #1565c0;">Zottola Shop Tracker - Projects & Work Types</strong><br>
+  All employees, projects, prevailing wage projects, and work types are managed through Google Sheets.<br><br>
+  To add or modify employees, projects, prevailing wage projects, or work types for the team, go to:<br>
+  <strong style="color: #1565c0;">Zottola Shop Tracker - Employees, Projects, Prevailing Wage Projects and Work Types</strong><br>
   (Google Drive link — see IT or management)
 </p>
 <p style="font-size: 12px; color: #999; background: #f5f5f5; padding: 12px; border-radius: 4px; border-left: 4px solid #ffc107;">
-  ℹ️ <strong>Local projects added here are for testing only</strong> and will not sync to other devices.
-</p>
-</div>
-
-<div class="section">
-<div class="info-box">👥 Employees — Sync Setup Required</div>
-<p style="font-size: 13px; color: #333; margin-bottom: 1rem; line-height: 1.6;">
-  Employees are set up to sync from the Google Sheet the same way Projects and Work Types do, but this needs a one-time setup that isn't done yet:<br><br>
-  1. Add an <strong>"Employees"</strong> tab to the Sheet (same format as the Projects/WorkTypes tabs — a header row, then one name per row in column A)<br>
-  2. Add a <strong>getEmployees</strong> action to the Apps Script proxy that reads that tab, matching the existing getProjects/getWorkTypes pattern<br>
-  3. Redeploy the Apps Script (Deploy → Manage deployments → Edit → New Version → Deploy)<br><br>
-  Until that's done, the app safely falls back to its built-in employee list plus anything added below as temporary — nothing breaks, it just won't be pulling from the Sheet yet.
+  ℹ️ <strong>Local employees, projects, and work types added here only appear on this tablet</strong> and will not sync to other devices.
 </p>
 </div>
 
@@ -204,22 +193,6 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div class="section">
-<div class="info-box">🔵 Prevailing Wage Projects</div>
-<p style="font-size: 14px; color: #333; margin-bottom: 1rem; line-height: 1.6;">
-  <strong>Prevailing wage projects are managed through the Google Sheet.</strong><br><br>
-  To mark which projects use prevailing wage rates:<br>
-  1. Go to the Google Sheet<br>
-  2. Open the <strong>"PWProjects"</strong> tab<br>
-  3. Add project names in column A (one per row)<br>
-  4. Save the sheet<br>
-  5. Next time you open the app, PW projects will sync automatically
-</p>
-<p style="font-size: 12px; color: #666; background: #e8f5e9; padding: 12px; border-radius: 4px; border-left: 4px solid #2e7d32;">
-  ✓ When a PW project is selected on Track tab, a <strong>🔵 PW PROJECT</strong> badge appears and onsite hours automatically apply prevailing wage rate.
-</p>
-</div>
-
-<div class="section">
 <div class="info-box">ℹ️ Cloud Sync Status</div>
 <p style="font-size: 13px; color: #333;">
   <strong>Last sync:</strong> <span id="lastSyncTime">On app startup</span><br>
@@ -232,33 +205,51 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div id="settings" class="tab-content">
-<div class="info-box">App Status<br><br>Employees: <span id="settingsEmployees">0</span><br>Projects: <span id="settingsProjects">0</span><br>Work Types: <span id="settingsWorkTypes">0</span></div>
-
 <div class="section" style="margin-top: 2rem;">
+<div class="section-title">This Device</div>
+<p style="font-size: 12px; color: #666; margin-bottom: 8px;">
+  Name this device so its backups can be told apart from other tablets once they're all landing in the same Drive folder (e.g. "Shop Tablet 1", "Fred's Tablet").
+</p>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 1.5rem;">
+  <input type="text" id="deviceNameInput" placeholder="e.g., Shop Tablet 1" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  <button onclick="saveDeviceNameUI()" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Save Name</button>
+</div>
+</div>
+
+<div class="section">
 <div class="section-title">Data Backup & Email</div>
 <p style="font-size: 12px; color: #666; margin-bottom: 1rem;">Daily automated email backup reminder sent to m.haywiser@zottolafab.com at 5 PM (via Claude Cowork scheduler).</p>
 <div style="background: #f0f8ff; border-left: 4px solid #2196F3; padding: 12px; margin-bottom: 1rem; font-size: 12px; border-radius: 2px;">
-  <p style="margin: 0 0 8px; font-weight: 600;">📧 Backup Email Workflow:</p>
-  <p style="margin: 0 0 6px;">1. Cowork sends backup reminder at 5 PM daily</p>
-  <p style="margin: 0 0 6px;">2. Click "Download Backup" button below</p>
-  <p style="margin: 0 0 6px;">3. Save file: zottola_backup_[DATE].json</p>
-  <p style="margin: 0;">4. Upload JSON to Google Drive backup folder</p>
+  <p style="margin: 0 0 8px; font-weight: 600;">📧 Backup Workflow:</p>
+  <p style="margin: 0 0 6px;">1. Cowork sends a reminder at 5 PM daily (in case anything below needs attention)</p>
+  <p style="margin: 0;">2. Click <strong>"Backup to Drive"</strong> below — it uploads directly, no download/upload steps needed</p>
 </div>
 <div id="backupStatus"></div>
 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<button class="btn-green" onclick="backupToDrive()" style="flex: 1; min-width: 200px;">☁️ Backup to Drive</button>
 <button class="btn-blue" onclick="downloadBackup()" style="flex: 1; min-width: 200px;">Download Backup</button>
 <button class="btn-blue" onclick="previewBackupFile()" style="flex: 1; min-width: 200px;">Preview Backup File</button>
 <button class="btn-green" onclick="restoreFromBackup()" style="flex: 1; min-width: 200px;">Restore from Backup</button>
 </div>
+<div id="backupToDriveStatus" style="font-size: 12px; margin-top: 8px;"></div>
 <p style="font-size: 12px; color: #999; margin-top: 1rem; line-height: 1.5;">
 <strong>How it works:</strong><br>
-• Auto-backs up every time you enter hours<br>
-• Daily backup at 5 PM<br>
-• Download backup and save to your computer<br>
+• Auto-backs up locally every time you enter hours<br>
+• Daily local backup at 5 PM<br>
+• "Backup to Drive" pushes the current backup straight to Google Drive — no manual download/upload<br>
 • Restore anytime if needed
 </p>
 </div>
+
+<div class="section" style="margin-top: 1.5rem;">
+<div class="section-title">Browse Past Backups</div>
+<p style="font-size: 12px; color: #666; margin-bottom: 1rem;">
+  A dated backup is created automatically on this device the first time the app is opened after 5 PM each day. Pick a specific day below instead of only being able to get "whatever's most recent."
+</p>
+<div id="backupHistoryList"></div>
 </div>
+</div>
+
 </div>
 </div>
 
@@ -404,6 +395,26 @@ function saveData() {
   createDailyBackupIfNeeded();
 }
 
+// Lets each device identify itself in backups, so a shared Drive folder
+// full of timestamped JSON files from multiple tablets can actually be told
+// apart — without this, "restore Tablet 3's data" means guessing which
+// anonymous file is the right one.
+function saveDeviceNameUI() {
+  const inp = document.getElementById('deviceNameInput');
+  setDeviceName(inp.value);
+  backupData(); // refresh 'latest' so it carries the new name immediately
+  updateBackupDisplay();
+}
+
+function getDeviceName() {
+  return localStorage.getItem('zottola_deviceName') || 'Unnamed Device';
+}
+function setDeviceName(name) {
+  name = (name || '').trim();
+  if (!name) return;
+  localStorage.setItem('zottola_deviceName', name);
+}
+
 function backupData() {
   const timestamp = new Date().toISOString();
   const allData = {};
@@ -414,6 +425,7 @@ function backupData() {
   }
   const backup = {
     timestamp: timestamp,
+    deviceName: getDeviceName(),
     data: allData,
     projectCount: projects.length,
     workTypeCount: workTypes.length
@@ -438,6 +450,7 @@ function createDailyBackupIfNeeded() {
     }
     const backup = {
       timestamp: timestamp,
+      deviceName: getDeviceName(),
       data: allData,
       projectCount: projects.length,
       workTypeCount: workTypes.length
@@ -695,7 +708,7 @@ function updateSyncStatusDisplay() {
     if (projEl) projEl.textContent = status.projectCount;
     if (wtEl) wtEl.textContent = status.workTypeCount;
     if (pwEl) pwEl.textContent = status.pwCount;
-    if (empEl) empEl.textContent = `${status.employeeCount}${status.employeesSynced ? ' (from Sheet)' : ' (local list — getEmployees not deployed yet)'}`;
+    if (empEl) empEl.textContent = status.employeeCount;
   } else {
     timeEl.textContent = `${when} — FAILED (${status.error})`;
     timeEl.style.color = '#c62828';
@@ -1793,15 +1806,152 @@ function updateProjectList() {
 
 function updateBackupDisplay() {
   const backupElement = document.getElementById('backupStatus');
+  const nameInput = document.getElementById('deviceNameInput');
+  if (nameInput && document.activeElement !== nameInput) nameInput.value = getDeviceName();
   if (!backupElement) return;
   
   const backup = JSON.parse(localStorage.getItem('zottola_backup_latest')) || null;
   if (backup) {
     const d = new Date(backup.timestamp);
     const timeStr = d.toLocaleString();
-    backupElement.innerHTML = `<div style="color: #4CAF50; font-weight: 600; margin-bottom: 1rem;">✓ Last backup: ${timeStr}</div>`;
+    backupElement.innerHTML = `<div style="color: #4CAF50; font-weight: 600; margin-bottom: 1rem;">✓ Last backup: ${timeStr} — ${getDeviceName()}</div>`;
   } else {
     backupElement.innerHTML = `<div style="color: #ff9800; font-weight: 600; margin-bottom: 1rem;">⚠ No backup yet. Data will auto-backup on next entry.</div>`;
+  }
+  renderBackupHistory();
+}
+
+// Tier 1: makes the daily dated backups (already silently created by
+// createDailyBackupIfNeeded every day after 5 PM) actually browsable and
+// restorable, instead of only ever being able to get "whatever's latest".
+function listDailyBackups() {
+  const dates = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('zottola_backup_daily_')) {
+      dates.push(k.replace('zottola_backup_daily_', ''));
+    }
+  }
+  return dates.sort().reverse(); // most recent first
+}
+
+function renderBackupHistory() {
+  const el = document.getElementById('backupHistoryList');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const dates = listDailyBackups();
+  if (dates.length === 0) {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size: 12px; color: #999;';
+    p.textContent = 'No daily backups yet — one is created automatically the first time the app is opened after 5 PM each day.';
+    el.appendChild(p);
+    return;
+  }
+
+  dates.forEach(date => {
+    const storageKey = 'zottola_backup_daily_' + date;
+    const backup = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    const dayCount = backup && backup.data ? Object.keys(backup.data).length : 0;
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f9f9f9; border-radius:4px; margin-bottom:6px; font-size:13px;';
+
+    const label = document.createElement('span');
+    const devName = backup && backup.deviceName ? backup.deviceName : getDeviceName();
+    label.textContent = `${date} — ${devName} (${dayCount} day${dayCount === 1 ? '' : 's'} of data)`;
+
+    const btnGroup = document.createElement('div');
+    const downloadBtn = document.createElement('button');
+    downloadBtn.type = 'button';
+    downloadBtn.textContent = 'Download';
+    downloadBtn.style.cssText = 'padding:4px 10px; margin-right:6px; border:1px solid #2196F3; background:#fff; color:#2196F3; border-radius:4px; cursor:pointer; font-size:12px;';
+    downloadBtn.addEventListener('click', () => downloadSpecificBackup(storageKey, date));
+
+    const restoreBtn = document.createElement('button');
+    restoreBtn.type = 'button';
+    restoreBtn.textContent = 'Restore';
+    restoreBtn.style.cssText = 'padding:4px 10px; border:1px solid #c62828; background:#fff; color:#c62828; border-radius:4px; cursor:pointer; font-size:12px;';
+    restoreBtn.addEventListener('click', () => restoreFromSpecificBackup(storageKey, date));
+
+    btnGroup.appendChild(downloadBtn);
+    btnGroup.appendChild(restoreBtn);
+    row.appendChild(label);
+    row.appendChild(btnGroup);
+    el.appendChild(row);
+  });
+}
+
+function downloadSpecificBackup(storageKey, dateLabel) {
+  const backupStr = localStorage.getItem(storageKey);
+  if (!backupStr) { alert('That backup is no longer available.'); return; }
+  const backup = JSON.parse(backupStr);
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `zottola_backup_${dateLabel}.json`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function restoreFromSpecificBackup(storageKey, dateLabel) {
+  const backupStr = localStorage.getItem(storageKey);
+  if (!backupStr) { alert('That backup is no longer available.'); return; }
+  const backup = JSON.parse(backupStr);
+  if (!backup.data || Object.keys(backup.data).length === 0) { alert('That backup is empty.'); return; }
+
+  pendingRestore = backup;
+  const backupDate = new Date(backup.timestamp).toLocaleString();
+  const dataCount = Object.keys(backup.data).length;
+
+  document.getElementById('restoreConfirmModal').style.display = 'flex';
+  document.getElementById('restoreConfirmText').textContent =
+    `Restoring the ${dateLabel} daily backup\nBackup Date: ${backupDate}\nRecords: ${dataCount}\n\nClick CONFIRM to restore all data from this date.`;
+}
+
+// Tier 2: pushes the backup straight to Drive via the Apps Script proxy,
+// removing the manual download-then-upload dependency entirely. Requires a
+// 'saveBackup' action added to the Apps Script (doPost) — see the shop
+// tracker skill notes for the exact code. Falls back gracefully (clear
+// error, no data loss risk) if that hasn't been deployed yet — the local
+// backup this reads from is untouched either way.
+async function backupToDrive() {
+  backupData(); // make sure 'latest' reflects right now before sending
+  const backupStr = localStorage.getItem('zottola_backup_latest');
+  const statusEl = document.getElementById('backupToDriveStatus');
+
+  if (!backupStr) {
+    if (statusEl) { statusEl.textContent = 'No backup available yet. Enter some data first.'; statusEl.style.color = '#ff9800'; }
+    return;
+  }
+
+  const proxyUrl = 'https://script.google.com/macros/s/AKfycbxm1HYg9rAZPJo50GE5jem__NKZoK7EdlUN6xr_SIZcqoGrEJME7NMxOQemgfvwarR8KA/exec';
+  if (statusEl) { statusEl.textContent = 'Uploading to Drive...'; statusEl.style.color = '#666'; }
+
+  try {
+    // Content-Type text/plain avoids a CORS preflight against the Apps
+    // Script endpoint (Apps Script doesn't handle OPTIONS requests well) —
+    // the script parses e.postData.contents as JSON manually on its side.
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveBackup', token: 'zottola-shop-tracker-2026', deviceName: getDeviceName(), backup: backupStr })
+    });
+    const json = await response.json();
+    if (json.success) {
+      localStorage.setItem('zottola_lastDriveBackup', new Date().toISOString());
+      if (statusEl) { statusEl.textContent = `✓ Backed up to Drive at ${new Date().toLocaleString()}`; statusEl.style.color = '#2e7d32'; }
+    } else {
+      throw new Error(json.error || 'Unknown error');
+    }
+  } catch (err) {
+    if (statusEl) { statusEl.textContent = `❌ Backup to Drive failed: ${err.message}`; statusEl.style.color = '#c62828'; }
+    console.log('Backup to Drive failed', err);
   }
 }
 
