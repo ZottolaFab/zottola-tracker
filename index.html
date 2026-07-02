@@ -50,6 +50,22 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 .export-section { background: #f0f7ff; padding: 1.5rem; border-radius: 4px; border: 1px solid #b3d9ff; }
 .export-buttons { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 1.5rem; }
 @media (min-width: 640px) { .export-buttons { grid-template-columns: repeat(3, 1fr); } }
+.print-header { display: none; }
+@media print {
+  body { background: white; padding: 0; }
+  .container { padding: 0; }
+  .header, #summaryWeekRangeLabel { display: none !important; }
+  .tabs, .tabs-wrapper > .tabs, #summary > label, #summary > select, #summary > input, #summary button, #saveChangesBtn { display: none !important; }
+  .tab-content { display: none !important; }
+  #summary.tab-content { display: block !important; }
+  #summary #summaryContent { display: block !important; }
+  #summaryContent table th:last-child, #summaryContent table td:last-child { display: none; } /* Actions column doesn't belong on paper */
+  .print-header { display: block !important; margin-bottom: 1rem; }
+  .print-header h2 { font-size: 18px; margin-bottom: 4px; }
+  .print-header .print-subtitle { font-size: 13px; color: #666; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+}
 </style>
 </head>
 <body>
@@ -81,7 +97,14 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div id="summaryWeekRangeLabel" style="font-size: 13px; color: #666; margin-bottom: 1rem;"></div>
 
 <label style="margin-top: 1rem;">View for</label>
-<select id="summaryEmp" onchange="updateSummaryView()" style="margin-bottom: 1.5rem;"></select>
+<select id="summaryEmp" onchange="updateSummaryView()" style="margin-bottom: 1rem;"></select>
+
+<button onclick="printSummary()" style="padding: 8px 16px; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 1.5rem;">🖨️ Print / Save as PDF</button>
+
+<div class="print-header" id="printHeader">
+  <h2>Zottola Fab Shop Tracker</h2>
+  <div class="print-subtitle" id="printSubtitle"></div>
+</div>
 
 <div style="margin-bottom: 1.5rem; display: flex; gap: 12px;">
   <button onclick="showAddEntryForm()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">+ Add New Entry</button>
@@ -745,6 +768,15 @@ function updateSettingsCounts() {
   if (seEl) seEl.textContent = employees.length;
 }
 
+function printSummary() {
+  const emp = document.getElementById('summaryEmp').value || 'All_Employees';
+  const dateStr = document.getElementById('summaryDate').value || new Date().toISOString().split('T')[0];
+  const originalTitle = document.title;
+  document.title = `Zottola_${emp.replace(/\s+/g, '_')}_Week_${dateStr}`;
+  window.onafterprint = () => { document.title = originalTitle; window.onafterprint = null; };
+  window.print();
+}
+
 function saveSummaryDatePref() {
   const val = document.getElementById('summaryDate').value;
   if (val) localStorage.setItem('zottola_summaryDate', val);
@@ -1229,10 +1261,15 @@ function updateSummaryView() {
   saturdayDate.setDate(saturdayDate.getDate() + 5);
   
   const rangeLabelEl = document.getElementById('summaryWeekRangeLabel');
+  const mondayLabel = mondayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const saturdayLabel = saturdayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
   if (rangeLabelEl) {
-    const mondayLabel = mondayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    const saturdayLabel = saturdayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
     rangeLabelEl.textContent = `${mondayLabel} – ${saturdayLabel}`;
+  }
+  const printSubtitleEl = document.getElementById('printSubtitle');
+  if (printSubtitleEl) {
+    const empLabel = selectedEmp || 'All Employees';
+    printSubtitleEl.textContent = `${empLabel} — ${mondayLabel} – ${saturdayLabel}`;
   }
   
   const weekDates = [];
