@@ -173,6 +173,17 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div class="section">
+<div class="info-box">👥 Employees — Sync Setup Required</div>
+<p style="font-size: 13px; color: #333; margin-bottom: 1rem; line-height: 1.6;">
+  Employees are set up to sync from the Google Sheet the same way Projects and Work Types do, but this needs a one-time setup that isn't done yet:<br><br>
+  1. Add an <strong>"Employees"</strong> tab to the Sheet (same format as the Projects/WorkTypes tabs — a header row, then one name per row in column A)<br>
+  2. Add a <strong>getEmployees</strong> action to the Apps Script proxy that reads that tab, matching the existing getProjects/getWorkTypes pattern<br>
+  3. Redeploy the Apps Script (Deploy → Manage deployments → Edit → New Version → Deploy)<br><br>
+  Until that's done, the app safely falls back to its built-in employee list plus anything added below as temporary — nothing breaks, it just won't be pulling from the Sheet yet.
+</p>
+</div>
+
+<div class="section">
 <div class="info-box">➕ Add Temporary (This Device Only)</div>
 <p style="font-size: 12px; color: #666; margin-bottom: 1rem; line-height: 1.6;">
   Need to log hours for someone or something not yet in the Google Sheet? Add it here — it works immediately on this device, but it will <strong>not</strong> sync to other tablets or to the Sheet. Once it's added to the Sheet for real, remove the temporary version below so the list stays clean.
@@ -214,13 +225,14 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   <strong>Last sync:</strong> <span id="lastSyncTime">On app startup</span><br>
   <strong>Projects synced:</strong> <span id="syncedProjectCount">0</span><br>
   <strong>Work types synced:</strong> <span id="syncedWorkTypeCount">0</span><br>
-  <strong>PW projects synced:</strong> <span id="syncedPWCount">0</span>
+  <strong>PW projects synced:</strong> <span id="syncedPWCount">0</span><br>
+  <strong>Employees synced:</strong> <span id="syncedEmployeeCount">0</span>
 </p>
 </div>
 </div>
 
 <div id="settings" class="tab-content">
-<div class="info-box">App Status<br><br>Employees: 10<br>Projects: <span id="settingsProjects">0</span><br>Work Types: <span id="settingsWorkTypes">0</span></div>
+<div class="info-box">App Status<br><br>Employees: <span id="settingsEmployees">0</span><br>Projects: <span id="settingsProjects">0</span><br>Work Types: <span id="settingsWorkTypes">0</span></div>
 
 <div class="section" style="margin-top: 2rem;">
 <div class="section-title">Data Backup & Email</div>
@@ -309,11 +321,12 @@ const defaultWorkTypes = [
   'Perimeter Safety Cable Install'
 ];
 const types = ['Office', 'Shop', 'Travel', 'Onsite'];
-const employees = ['Fred', 'Jim', 'Laura', 'Mark', 'Jeff', 'Rich', 'Cody', 'Darin', 'Kate', 'Tony'];
+const defaultEmployees = ['Fred', 'Jim', 'Laura', 'Mark', 'Jeff', 'Rich', 'Cody', 'Darin', 'Kate', 'Tony'];
 
 let currentDate = new Date().toISOString().split('T')[0];
 let projects = JSON.parse(localStorage.getItem('zottola_projects')) || defaultProjects;
 let workTypes = JSON.parse(localStorage.getItem('zottola_workTypes')) || defaultWorkTypes;
+let employees = JSON.parse(localStorage.getItem('zottola_employees')) || defaultEmployees;
 let data = {};
 
 // Temporary (local-only) entries: lets a device add an employee/project/work
@@ -587,46 +600,73 @@ function updateWeekView() {
 
 // Cloud sync from Google Sheets via proxy
 async function syncFromGoogleSheets() {
+  const proxyUrl = 'https://script.google.com/macros/s/AKfycbxm1HYg9rAZPJo50GE5jem__NKZoK7EdlUN6xr_SIZcqoGrEJME7NMxOQemgfvwarR8KA/exec';
+  let hadCoreFailure = false;
+  let firstError = null;
+  let employeesSynced = false;
+
+  // Fetch Projects
   try {
-    const proxyUrl = 'https://script.google.com/macros/s/AKfycbwORFU0KjG9RsKRRza0_eAVNsP6jrY61FliumEj2c-PPb_6o8z4dYkTPG2qbrHbAA7dJQ/exec';
-    
-    // Fetch Projects
     const projectsResponse = await fetch(proxyUrl + '?action=getProjects');
     const projectsJson = await projectsResponse.json();
     if (projectsJson.success && projectsJson.data.length > 0) {
       localStorage.setItem('zottola_projects', JSON.stringify(projectsJson.data));
       projects = projectsJson.data.slice(); // keep the in-memory list in sync too, not just localStorage
     }
-    
-    // Fetch Work Types
+  } catch (err) { hadCoreFailure = true; firstError = firstError || err; }
+
+  // Fetch Work Types
+  try {
     const workTypesResponse = await fetch(proxyUrl + '?action=getWorkTypes');
     const workTypesJson = await workTypesResponse.json();
     if (workTypesJson.success && workTypesJson.data.length > 0) {
       localStorage.setItem('zottola_workTypes', JSON.stringify(workTypesJson.data));
       workTypes = workTypesJson.data.slice();
     }
-    
-    // Fetch PW Projects
+  } catch (err) { hadCoreFailure = true; firstError = firstError || err; }
+
+  // Fetch PW Projects
+  try {
     const pwResponse = await fetch(proxyUrl + '?action=getPWProjects');
     const pwJson = await pwResponse.json();
     if (pwJson.success) {
       localStorage.setItem('zottola_pwProjects', JSON.stringify(pwJson.data));
     }
-    
-    console.log('✓ Cloud sync successful (including PW projects)');
+  } catch (err) { hadCoreFailure = true; firstError = firstError || err; }
+
+  // Fetch Employees. Kept isolated from the rest on purpose: the proxy may
+  // not have a 'getEmployees' action deployed yet, in which case this should
+  // quietly fall back to the local/default list rather than reporting the
+  // ENTIRE sync as failed when Projects/WorkTypes/PW just succeeded above.
+  try {
+    const employeesResponse = await fetch(proxyUrl + '?action=getEmployees');
+    const employeesJson = await employeesResponse.json();
+    if (employeesJson.success && employeesJson.data.length > 0) {
+      localStorage.setItem('zottola_employees', JSON.stringify(employeesJson.data));
+      employees = employeesJson.data.slice();
+      employeesSynced = true;
+    }
+  } catch (err) {
+    console.log('Employee sync not available yet (getEmployees action may not be deployed on the proxy) — using local employee list', err);
+  }
+
+  if (hadCoreFailure) {
+    console.log('Cloud sync failed (offline or access issue) — using local data', firstError);
+    localStorage.setItem('zottola_lastSyncStatus', JSON.stringify({
+      ok: false,
+      time: new Date().toISOString(),
+      error: String(firstError && firstError.message || firstError)
+    }));
+  } else {
+    console.log('✓ Cloud sync successful' + (employeesSynced ? ' (including employees)' : ' — employees not yet synced from Sheet'));
     localStorage.setItem('zottola_lastSyncStatus', JSON.stringify({
       ok: true,
       time: new Date().toISOString(),
       projectCount: projects.length,
       workTypeCount: workTypes.length,
-      pwCount: (pwJson.success ? pwJson.data.length : loadPWProjects().length)
-    }));
-  } catch (err) {
-    console.log('Cloud sync failed (offline or access issue) — using local data', err);
-    localStorage.setItem('zottola_lastSyncStatus', JSON.stringify({
-      ok: false,
-      time: new Date().toISOString(),
-      error: String(err && err.message || err)
+      pwCount: loadPWProjects().length,
+      employeeCount: employees.length,
+      employeesSynced: employeesSynced
     }));
   }
   updateSyncStatusDisplay();
@@ -641,6 +681,7 @@ function updateSyncStatusDisplay() {
   const projEl = document.getElementById('syncedProjectCount');
   const wtEl = document.getElementById('syncedWorkTypeCount');
   const pwEl = document.getElementById('syncedPWCount');
+  const empEl = document.getElementById('syncedEmployeeCount');
   if (!timeEl) return;
 
   if (!status) {
@@ -654,6 +695,7 @@ function updateSyncStatusDisplay() {
     if (projEl) projEl.textContent = status.projectCount;
     if (wtEl) wtEl.textContent = status.workTypeCount;
     if (pwEl) pwEl.textContent = status.pwCount;
+    if (empEl) empEl.textContent = `${status.employeeCount}${status.employeesSynced ? ' (from Sheet)' : ' (local list — getEmployees not deployed yet)'}`;
   } else {
     timeEl.textContent = `${when} — FAILED (${status.error})`;
     timeEl.style.color = '#c62828';
@@ -684,8 +726,10 @@ async function init() {
 function updateSettingsCounts() {
   const spEl = document.getElementById('settingsProjects');
   const swEl = document.getElementById('settingsWorkTypes');
+  const seEl = document.getElementById('settingsEmployees');
   if (spEl) spEl.textContent = projects.length;
   if (swEl) swEl.textContent = workTypes.length;
+  if (seEl) seEl.textContent = employees.length;
 }
 
 function saveSummaryDatePref() {
