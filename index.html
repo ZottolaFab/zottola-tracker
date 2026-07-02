@@ -1091,8 +1091,16 @@ function editRow(tr) {
 
   const tempProj = loadTempList('zottola_tempProjects');
   const tempWt = loadTempList('zottola_tempWorkTypes');
-  cells[1].innerHTML = `<select id="rowEditProj" style="width:100%; padding:4px; font-size:12px;">${projects.map(p => `<option value="${escAttr(p)}" ${p === proj ? 'selected' : ''}>${p}${tempProj.includes(p) ? ' (temp)' : ''}</option>`).join('')}</select>`;
-  cells[2].innerHTML = `<select id="rowEditWt" style="width:100%; padding:4px; font-size:12px;">${workTypes.map(w => `<option value="${escAttr(w)}" ${w === wt ? 'selected' : ''}>${w}${tempWt.includes(w) ? ' (temp)' : ''}</option>`).join('')}</select>`;
+  // If this row's project/work type has since been removed or renamed in the
+  // Sheet, it won't be in projects/workTypes anymore — without this, the
+  // <select> would silently default to whatever the first option happens to
+  // be, and clicking confirm without noticing would silently reclassify
+  // this row's hours onto the wrong project. Always keep the row's true
+  // current value selectable, flagged, so nothing changes unless you mean it to.
+  const projOptions = projects.includes(proj) ? projects : [proj, ...projects];
+  const wtOptions = workTypes.includes(wt) ? workTypes : [wt, ...workTypes];
+  cells[1].innerHTML = `<select id="rowEditProj" style="width:100%; padding:4px; font-size:12px;">${projOptions.map(p => `<option value="${escAttr(p)}" ${p === proj ? 'selected' : ''}>${p}${tempProj.includes(p) ? ' (temp)' : ''}${!projects.includes(p) ? ' (not in current list)' : ''}</option>`).join('')}</select>`;
+  cells[2].innerHTML = `<select id="rowEditWt" style="width:100%; padding:4px; font-size:12px;">${wtOptions.map(w => `<option value="${escAttr(w)}" ${w === wt ? 'selected' : ''}>${w}${tempWt.includes(w) ? ' (temp)' : ''}${!workTypes.includes(w) ? ' (not in current list)' : ''}</option>`).join('')}</select>`;
   cells[3].innerHTML = `<input type="text" id="rowEditCat" value="${escAttr(cat)}" placeholder="e.g., Rework" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box;">`;
   cells[4].innerHTML = miniSpinnerHTML('rowEditOffice', hours.Office);
   cells[5].innerHTML = miniSpinnerHTML('rowEditShop', hours.Shop);
