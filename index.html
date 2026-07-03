@@ -163,7 +163,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 
 <div id="export" class="tab-content">
 <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px; font-size: 12px; color: #333; margin-bottom: 1.5rem;">
-  ℹ️ Every export includes this device's name in a "Device" column, so exports from multiple tablets can be told apart when combined. <strong>Set this device's name on the Backup tab before exporting</strong> if it isn't already — otherwise it'll just say "Unnamed Device."
+  ℹ️ Every export includes this device's name in a "Device" column, so exports from multiple tablets can be told apart when combined. <strong>Set this device's name on the Administration tab</strong> before exporting if it isn't already — otherwise it'll just say "Unnamed Device."
 </div>
 <div class="export-section">
 <h3 style="margin-bottom: 1rem;">Weekly Export</h3>
@@ -186,12 +186,23 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div id="admin" class="tab-content">
 
 <div class="section">
+<div class="section-title">This Device</div>
+<p style="font-size: 12px; color: #666; margin-bottom: 8px;">
+  Name this device so its backups and exports can be told apart from other tablets once they're all landing in the same Drive folder (e.g. "Shop Tablet 1", "Fred's Tablet").
+</p>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 1.5rem;">
+  <input type="text" id="deviceNameInput" placeholder="e.g., Shop Tablet 1" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  <button onclick="saveDeviceNameUI()" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Save Name</button>
+</div>
+</div>
+
+<div class="section">
 <div class="info-box">Employees, Projects, Prevailing Wage Projects and Work Types</div>
 <p style="font-size: 14px; color: #333; margin-bottom: 1.5rem; line-height: 1.6;">
   All employees, projects, prevailing wage projects, and work types are managed through Google Sheets.<br><br>
   To add or modify employees, projects, prevailing wage projects, or work types for the team, go to:<br>
   <strong style="color: #1565c0;">Zottola Shop Tracker - Employees, Projects, Prevailing Wage Projects and Work Types</strong><br>
-  (Google Drive link — see IT or management)
+  (Google Drive link — see Laura or Mark)
 </p>
 <p style="font-size: 12px; color: #999; background: #f5f5f5; padding: 12px; border-radius: 4px; border-left: 4px solid #ffc107;">
   ℹ️ <strong>Local employees, projects, and work types added here only appear on this tablet</strong> and will not sync to other devices.
@@ -232,13 +243,8 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 
 <div id="settings" class="tab-content">
 <div class="section" style="margin-top: 2rem;">
-<div class="section-title">This Device</div>
-<p style="font-size: 12px; color: #666; margin-bottom: 8px;">
-  Name this device so its backups can be told apart from other tablets once they're all landing in the same Drive folder (e.g. "Shop Tablet 1", "Fred's Tablet").
-</p>
-<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 1.5rem;">
-  <input type="text" id="deviceNameInput" placeholder="e.g., Shop Tablet 1" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-  <button onclick="saveDeviceNameUI()" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Save Name</button>
+<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px; font-size: 12px; color: #333;">
+  ℹ️ Backups (and exports) include this device's name so they can be told apart from other tablets. <strong>Set this device's name on the Administration tab</strong> if it isn't already — otherwise it'll just say "Unnamed Device."
 </div>
 </div>
 
@@ -2340,7 +2346,7 @@ function switchTab(tab, event) {
   if (tab === 'export') updateWeekExportPreview();
   if (tab === 'week') updateWeekView();
   if (tab === 'summary') updateSummaryView();
-  if (tab === 'admin') { renderPWProjectList(); renderTempEntriesList(); updateSyncStatusDisplay(); }
+  if (tab === 'admin') { renderPWProjectList(); renderTempEntriesList(); updateSyncStatusDisplay(); updateBackupDisplay(); }
   if (tab === 'settings') updateBackupDisplay();
 }
 
