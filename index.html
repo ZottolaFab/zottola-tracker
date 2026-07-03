@@ -162,6 +162,9 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 </div>
 
 <div id="export" class="tab-content">
+<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 12px; border-radius: 4px; font-size: 12px; color: #333; margin-bottom: 1.5rem;">
+  ℹ️ Every export includes this device's name in a "Device" column, so exports from multiple tablets can be told apart when combined. <strong>Set this device's name on the Backup tab before exporting</strong> if it isn't already — otherwise it'll just say "Unnamed Device."
+</div>
 <div class="export-section">
 <h3 style="margin-bottom: 1rem;">Weekly Export</h3>
 <label>Select week starting date</label>
@@ -270,6 +273,14 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   A dated backup is created automatically on this device the first time the app is opened after 5 PM each day. Pick a specific day below instead of only being able to get "whatever's most recent."
 </p>
 <div id="backupHistoryList"></div>
+</div>
+
+<div class="section" style="margin-top: 1.5rem; border: 1px solid #e57373; border-radius: 4px; padding: 1rem;">
+<div class="section-title" style="color: #c62828;">⚠️ Clear Test Data (This Device Only)</div>
+<p style="font-size: 12px; color: #666; margin-bottom: 1rem; line-height: 1.5;">
+  Wipes all hours entries on <strong>this device</strong> — use this before a real retest so old test data doesn't mix in with new results. A backup is taken automatically first, so nothing is permanently lost even if you change your mind. This does not touch any other device, and does not touch anything in Google Drive or the Sheet.
+</p>
+<button onclick="clearTestDataUI()" style="width: 100%; padding: 10px; background: #fff; border: 2px solid #c62828; color: #c62828; border-radius: 4px; cursor: pointer; font-weight: 600;">Clear All Hours Data On This Device</button>
 </div>
 </div>
 
@@ -557,10 +568,19 @@ function onAddProjChange() {
   } else {
     addPwBadge.style.display = 'none';
   }
+  // Prevent stale hours from a previous project selection accidentally
+  // carrying over onto whatever project is picked next.
+  ['addOffice', 'addShop', 'addTravel', 'addOnsite'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '0.00';
+  });
 }
 
 function getMondayOfWeek(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
+  let d = new Date((dateStr || '') + 'T00:00:00');
+  if (isNaN(d.getTime())) {
+    d = new Date(); // empty/invalid input — fall back to today rather than throwing
+  }
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff)).toISOString().split('T')[0];
@@ -949,8 +969,12 @@ function hideAddEntryForm() {
 function populateAddEntryDropdowns() {
   const tempProj = loadTempList('zottola_tempProjects');
   const tempWt = loadTempList('zottola_tempWorkTypes');
+  const pwList = loadPWProjects();
   const projSel = document.getElementById('addProj');
-  projSel.innerHTML = '<option value="">Select Project</option>' + projects.map(p => `<option value="${escAttr(p)}">${p}${tempProj.includes(p) ? ' (temp)' : ''}</option>`).join('');
+  projSel.innerHTML = '<option value="">Select Project</option>' + projects.map(p => {
+    const pwStyle = pwList.includes(p) ? ' style="color:#c62828; background-color:#ffebee;"' : '';
+    return `<option value="${escAttr(p)}"${pwStyle}>${p}${tempProj.includes(p) ? ' (temp)' : ''}${pwList.includes(p) ? ' 🔵' : ''}</option>`;
+  }).join('');
   
   const wtSel = document.getElementById('addWorkType');
   wtSel.innerHTML = '<option value="">Select Work Type</option>' + workTypes.map(w => `<option value="${escAttr(w)}">${w}${tempWt.includes(w) ? ' (temp)' : ''}</option>`).join('');
@@ -968,10 +992,10 @@ function addNewEntry() {
   const onsite = parseFloat(document.getElementById('addOnsite').value) || 0;
   const prevailingWage = isPrevailingWageProject(proj);
   
-  if (!date || !emp || !proj || !wt) {
-    alert('Please fill in all required fields');
-    return;
-  }
+  if (!date) { alert('Please select a date.'); return; }
+  if (!emp) { alert('No employee selected — pick one from "View for" on the Summary tab first.'); return; }
+  if (!proj) { alert('Please select a project.'); return; }
+  if (!wt) { alert('Please select a work type.'); return; }
   
   // Check if at least one hour type has a value
   if (office === 0 && shop === 0 && travel === 0 && onsite === 0) {
@@ -1051,6 +1075,9 @@ function paintRowCells(tr, proj, wt, cat, hours) {
   const cells = tr.children;
   const total = hours.Office + hours.Shop + hours.Travel + hours.Onsite + hours.OnsiteP;
   cells[1].textContent = proj;
+  const isPW = loadPWProjects().includes(proj);
+  cells[1].style.color = isPW ? '#c62828' : '';
+  cells[1].style.fontWeight = isPW ? '600' : '';
   cells[2].textContent = wt;
   cells[3].textContent = cat || '—';
   cells[4].textContent = hours.Office > 0 ? hours.Office.toFixed(2) : '—';
@@ -1124,6 +1151,39 @@ function updateSaveChangesVisibility() {
 
 // Single pencil-triggered editor for the WHOLE row: project, work type,
 // category, and every hour field together — no separate per-cell editing.
+// Prevents onsite hours from being logged at the regular rate on a
+// prevailing-wage project by mistake. Runs when the row editor opens and
+// again whenever the project dropdown changes. If there's already a value
+// in Onsite (Reg) when a PW project is selected, it's moved into Onsite
+// (PW) rather than silently zeroed, so nothing gets lost — it's forced into
+// the correct column instead.
+function applyPWLockToRowEditor() {
+  const projSel = document.getElementById('rowEditProj');
+  const onsiteInput = document.getElementById('rowEditOnsite');
+  const onsitePInput = document.getElementById('rowEditOnsiteP');
+  if (!projSel || !onsiteInput || !onsitePInput) return;
+
+  const isPW = loadPWProjects().includes(projSel.value);
+  const wrap = onsiteInput.closest('div');
+  const buttons = wrap ? wrap.querySelectorAll('button') : [];
+
+  if (isPW) {
+    const leftover = parseFloat(onsiteInput.value) || 0;
+    if (leftover > 0) {
+      const currentPW = parseFloat(onsitePInput.value) || 0;
+      onsitePInput.value = (currentPW + leftover).toFixed(2);
+    }
+    onsiteInput.value = '0.00';
+    onsiteInput.disabled = true;
+    buttons.forEach(b => { b.disabled = true; });
+    if (wrap) { wrap.style.opacity = '0.4'; wrap.title = 'Locked — this is a prevailing wage project. Use the PW column instead.'; }
+  } else {
+    onsiteInput.disabled = false;
+    buttons.forEach(b => { b.disabled = false; });
+    if (wrap) { wrap.style.opacity = '1'; wrap.title = ''; }
+  }
+}
+
 function editRow(tr) {
   const key = rowKeyFor(tr);
   const pending = pendingRowChanges[key];
@@ -1144,7 +1204,11 @@ function editRow(tr) {
   // current value selectable, flagged, so nothing changes unless you mean it to.
   const projOptions = projects.includes(proj) ? projects : [proj, ...projects];
   const wtOptions = workTypes.includes(wt) ? workTypes : [wt, ...workTypes];
-  cells[1].innerHTML = `<select id="rowEditProj" style="width:100%; padding:4px; font-size:12px;">${projOptions.map(p => `<option value="${escAttr(p)}" ${p === proj ? 'selected' : ''}>${p}${tempProj.includes(p) ? ' (temp)' : ''}${!projects.includes(p) ? ' (not in current list)' : ''}</option>`).join('')}</select>`;
+  const pwList = loadPWProjects();
+  cells[1].innerHTML = `<select id="rowEditProj" onchange="applyPWLockToRowEditor()" style="width:100%; padding:4px; font-size:12px;">${projOptions.map(p => {
+    const pwStyle = pwList.includes(p) ? ' style="color:#c62828; background-color:#ffebee;"' : '';
+    return `<option value="${escAttr(p)}"${pwStyle} ${p === proj ? 'selected' : ''}>${p}${tempProj.includes(p) ? ' (temp)' : ''}${!projects.includes(p) ? ' (not in current list)' : ''}${pwList.includes(p) ? ' 🔵' : ''}</option>`;
+  }).join('')}</select>`;
   cells[2].innerHTML = `<select id="rowEditWt" style="width:100%; padding:4px; font-size:12px;">${wtOptions.map(w => `<option value="${escAttr(w)}" ${w === wt ? 'selected' : ''}>${w}${tempWt.includes(w) ? ' (temp)' : ''}${!workTypes.includes(w) ? ' (not in current list)' : ''}</option>`).join('')}</select>`;
   cells[3].innerHTML = `<input type="text" id="rowEditCat" value="${escAttr(cat)}" placeholder="e.g., Rework" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box;">`;
   cells[4].innerHTML = miniSpinnerHTML('rowEditOffice', hours.Office);
@@ -1153,6 +1217,7 @@ function editRow(tr) {
   cells[7].innerHTML = miniSpinnerHTML('rowEditOnsite', hours.Onsite);
   cells[8].innerHTML = miniSpinnerHTML('rowEditOnsiteP', hours.OnsiteP);
   tr.style.background = '#e3f2fd';
+  applyPWLockToRowEditor();
 
   const actionsCell = cells[cells.length - 1];
   actionsCell.innerHTML = '';
@@ -1249,6 +1314,7 @@ function updateSummaryView() {
   const mondayStr = document.getElementById('summaryDate').value;
   const con = document.getElementById('summaryContent');
   con.innerHTML = '';
+  const pwProjectsList = loadPWProjects();
   
   if (!mondayStr) {
     con.innerHTML = '<p style="color: #999;">Please select a Monday date</p>';
@@ -1368,7 +1434,7 @@ function updateSummaryView() {
             
             empHtml += `<tr data-date="${escAttr(date)}" data-emp="${escAttr(emp)}" data-proj="${escAttr(proj)}" data-wt="${escAttr(workType)}" data-cat="${escAttr(cat)}" data-office="${catData.office}" data-shop="${catData.shop}" data-travel="${catData.travel}" data-onsite="${catData.onsite}" data-onsitep="${catData.onsiteP}" style="border-bottom: 1px solid #e0e0e0;">
               <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${formatDateWithDay(date)}</td>
-              <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${proj}</td>
+              <td style="padding: 8px; border-right: 1px solid #e0e0e0;${pwProjectsList.includes(proj) ? ' color:#c62828; font-weight:600;' : ''}">${proj}</td>
               <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${workType}</td>
               <td style="padding: 8px; border-right: 1px solid #e0e0e0;">${cat || '—'}</td>
               <td style="padding: 8px; text-align: right; border-right: 1px solid #e0e0e0;">${catData.office > 0 ? catData.office.toFixed(2) : '—'}</td>
@@ -1430,7 +1496,7 @@ function updateWeekExportPreview() {
 }
 
 function exportCSV() {
-  let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
+  let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours,Device\n';
   employees.forEach(e => {
     projects.forEach(p => {
       workTypes.forEach(w => {
@@ -1479,9 +1545,10 @@ function groupDayDataForCSV(dayData) {
 
 function csvRowsForDate(dateStr, dayData) {
   let out = '';
+  const device = getDeviceName();
   groupDayDataForCSV(dayData).forEach(r => {
     const total = r.Office + r.Shop + r.Travel + r.Onsite + r.OnsiteP;
-    out += `${dateStr},${csvField(r.emp)},${csvField(r.proj)},${csvField(r.workType)},${csvField(r.category)},${r.Office.toFixed(2)},${r.Shop.toFixed(2)},${r.Travel.toFixed(2)},${r.Onsite.toFixed(2)},${r.OnsiteP.toFixed(2)},${total.toFixed(2)}\n`;
+    out += `${dateStr},${csvField(r.emp)},${csvField(r.proj)},${csvField(r.workType)},${csvField(r.category)},${r.Office.toFixed(2)},${r.Shop.toFixed(2)},${r.Travel.toFixed(2)},${r.Onsite.toFixed(2)},${r.OnsiteP.toFixed(2)},${total.toFixed(2)},${csvField(device)}\n`;
   });
   return out;
 }
@@ -1496,7 +1563,7 @@ function exportFullWeek() {
     
     const mondayDate = getMondayOfWeek(dateStr);
     const weekDates = getDateRange(mondayDate);
-    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours,Device\n';
     
     weekDates.forEach(dStr => {
       const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
@@ -1507,7 +1574,7 @@ function exportFullWeek() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `zottola_week_${mondayDate}.csv`);
+    link.setAttribute('download', `zottola_week_${getDeviceName().replace(/[^a-zA-Z0-9 _-]/g, '')}_${mondayDate}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -1528,7 +1595,7 @@ function exportPreviousWeek() {
     const prevWeekDate = d.toISOString().split('T')[0];
     const mondayDate = getMondayOfWeek(prevWeekDate);
     const weekDates = getDateRange(mondayDate);
-    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours,Device\n';
     
     weekDates.forEach(dStr => {
       const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
@@ -1539,7 +1606,7 @@ function exportPreviousWeek() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `zottola_week_${mondayDate}.csv`);
+    link.setAttribute('download', `zottola_week_${getDeviceName().replace(/[^a-zA-Z0-9 _-]/g, '')}_${mondayDate}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -1587,16 +1654,17 @@ function exportWeeklySummary() {
       });
     });
     
-    let csv = `WEEKLY SUMMARY - Week of ${weekStr}\n\nEMPLOYEE TOTALS\nEmployee,Total Hours,Prevailing Wage Hours\n`;
+    const device = getDeviceName();
+    let csv = `WEEKLY SUMMARY - ${device} - Week of ${weekStr}\n\nEMPLOYEE TOTALS\nDevice,Employee,Total Hours,Prevailing Wage Hours\n`;
     Object.keys(empTotals).sort().forEach(e => {
       if (empTotals[e] > 0) {
-        csv += `${csvField(e)},${empTotals[e].toFixed(2)},${(empPWTotals[e] || 0).toFixed(2)}\n`;
+        csv += `${csvField(device)},${csvField(e)},${empTotals[e].toFixed(2)},${(empPWTotals[e] || 0).toFixed(2)}\n`;
       }
     });
-    csv += `\nPROJECT TOTALS\nProject,Total Hours,Prevailing Wage Hours\n`;
+    csv += `\nPROJECT TOTALS\nDevice,Project,Total Hours,Prevailing Wage Hours\n`;
     Object.keys(projTotals).sort().forEach(p => {
       if (projTotals[p] > 0) {
-        csv += `${csvField(p)},${projTotals[p].toFixed(2)},${(projPWTotals[p] || 0).toFixed(2)}\n`;
+        csv += `${csvField(device)},${csvField(p)},${projTotals[p].toFixed(2)},${(projPWTotals[p] || 0).toFixed(2)}\n`;
       }
     });
     
@@ -1606,7 +1674,7 @@ function exportWeeklySummary() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `zottola_summary_${mondayDate}.csv`);
+    link.setAttribute('download', `zottola_summary_${device.replace(/[^a-zA-Z0-9 _-]/g, '')}_${mondayDate}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -1992,6 +2060,39 @@ async function backupToDrive() {
   }
 }
 
+// Wipes only hours data (zottola_hours_*) on this device — leaves employees/
+// projects/work types/device name/existing backups untouched. Takes a fresh
+// safety backup first, filed into the existing Browse Past Backups list
+// (prefixed PRE-CLEAR) so it's recoverable through the normal restore flow
+// without needing any separate UI.
+function clearTestDataUI() {
+  const hourKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('zottola_hours_')) hourKeys.push(k);
+  }
+  if (hourKeys.length === 0) {
+    alert('No hours data found on this device — nothing to clear.');
+    return;
+  }
+  if (!confirm(`This will permanently remove ${hourKeys.length} day(s) of hours data from THIS DEVICE (${getDeviceName()}). A safety backup will be taken first, and other devices are not affected. Continue?`)) {
+    return;
+  }
+
+  backupData(); // refresh 'latest' snapshot right before wiping
+  const backupStr = localStorage.getItem('zottola_backup_latest');
+  if (backupStr) {
+    const label = 'PRE-CLEAR-' + new Date().toISOString().replace(/[:.]/g, '-');
+    localStorage.setItem('zottola_backup_daily_' + label, backupStr);
+  }
+
+  hourKeys.forEach(k => localStorage.removeItem(k));
+
+  alert(`✓ Cleared ${hourKeys.length} day(s) of hours data from this device. A safety backup was saved — see "Browse Past Backups" below if you need to recover it.`);
+  updateSummaryView();
+  updateBackupDisplay();
+}
+
 function downloadBackup() {
   const backupStr = localStorage.getItem('zottola_backup_latest');
   if (!backupStr) {
@@ -2150,7 +2251,7 @@ function proceedWithFileRestore() {
 
 function exportAllData() {
   try {
-    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours\n';
+    let csv = 'Date,Employee,Project,Work Type,Remarks,Office,Shop,Travel,Onsite,Onsite (PW),Total Hours,Device\n';
     let recordCount = 0;
     
     // Get all localStorage keys
@@ -2164,7 +2265,7 @@ function exportAllData() {
         const rows = groupDayDataForCSV(dayData);
         rows.forEach(r => {
           const total = r.Office + r.Shop + r.Travel + r.Onsite + r.OnsiteP;
-          csv += `${dateStr},${csvField(r.emp)},${csvField(r.proj)},${csvField(r.workType)},${csvField(r.category)},${r.Office.toFixed(2)},${r.Shop.toFixed(2)},${r.Travel.toFixed(2)},${r.Onsite.toFixed(2)},${r.OnsiteP.toFixed(2)},${total.toFixed(2)}\n`;
+          csv += `${dateStr},${csvField(r.emp)},${csvField(r.proj)},${csvField(r.workType)},${csvField(r.category)},${r.Office.toFixed(2)},${r.Shop.toFixed(2)},${r.Travel.toFixed(2)},${r.Onsite.toFixed(2)},${r.OnsiteP.toFixed(2)},${total.toFixed(2)},${csvField(getDeviceName())}\n`;
           recordCount++;
         });
       }
@@ -2179,7 +2280,7 @@ function exportAllData() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `zottola_ALL_DATA_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `zottola_ALL_DATA_${getDeviceName().replace(/[^a-zA-Z0-9 _-]/g, '')}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
