@@ -118,36 +118,36 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
     <div><label>Employee</label><input type="text" id="addEmpDisplay" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;"></div>
     <div><label>Project</label><select id="addProj" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onchange="onAddProjChange()"></select><div id="addPwBadge" style="margin-top: 8px; font-weight: 600; color: #d32f2f; display: none; padding: 4px 8px; background: #ffebee; border-radius: 4px; font-size: 12px; text-align: center;">🔵 PW PROJECT</div></div>
     <div><label>Work Type</label><select id="addWorkType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></select></div>
-    <div><label>Remarks (optional)</label><input type="text" id="addCategory" placeholder="e.g., Rework, Rush" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
+    <div><label>Remarks (optional)</label><textarea id="addCategory" placeholder="e.g., Rework, Rush" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: inherit; resize: vertical;"></textarea></div>
   </div>
   
   <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
     <div><label>Office Hours</label>
       <div style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="spinnerStep('addOffice', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
-        <input type="number" id="addOffice" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addOffice')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
-        <button type="button" onclick="spinnerStep('addOffice', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+        <button type="button" onclick="spinnerStep('addOffice', -0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addOffice" min="0" max="12" step="0.25" inputmode="decimal" value="0.00" onchange="spinnerClamp('addOffice')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addOffice', 0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
       </div>
     </div>
     <div><label>Shop Hours</label>
       <div style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="spinnerStep('addShop', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
-        <input type="number" id="addShop" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addShop')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
-        <button type="button" onclick="spinnerStep('addShop', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+        <button type="button" onclick="spinnerStep('addShop', -0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addShop" min="0" max="12" step="0.25" inputmode="decimal" value="0.00" onchange="spinnerClamp('addShop')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addShop', 0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
       </div>
     </div>
     <div><label>Travel Hours</label>
       <div style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="spinnerStep('addTravel', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
-        <input type="number" id="addTravel" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addTravel')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
-        <button type="button" onclick="spinnerStep('addTravel', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+        <button type="button" onclick="spinnerStep('addTravel', -0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addTravel" min="0" max="12" step="0.25" inputmode="decimal" value="0.00" onchange="spinnerClamp('addTravel')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addTravel', 0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
       </div>
     </div>
     <div><label>Onsite Hours</label>
       <div style="display:flex; align-items:center; gap:4px;">
-        <button type="button" onclick="spinnerStep('addOnsite', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
-        <input type="number" id="addOnsite" min="0" max="12" step="0.5" inputmode="decimal" value="0.00" onchange="spinnerClamp('addOnsite')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
-        <button type="button" onclick="spinnerStep('addOnsite', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+        <button type="button" onclick="spinnerStep('addOnsite', -0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+        <input type="number" id="addOnsite" min="0" max="12" step="0.25" inputmode="decimal" value="0.00" onchange="spinnerClamp('addOnsite')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+        <button type="button" onclick="spinnerStep('addOnsite', 0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
       </div>
     </div>
   </div>
@@ -406,26 +406,26 @@ function getStorageKey(dateStr) { return `zottola_hours_${dateStr}`; }
 function loadDataForDate(dateStr) { data = JSON.parse(localStorage.getItem(getStorageKey(dateStr))) || {}; }
 
 // Shared spinner control used by Add New Entry and Summary cell editing.
-// Bounds: 0-12 hours, 0.5 increments.
+// Bounds: 0-12 hours, 0.25 increments.
 function spinnerStep(inputId, delta) {
   const inp = document.getElementById(inputId);
   if (!inp) return;
   let v = (parseFloat(inp.value) || 0) + delta;
-  v = Math.min(12, Math.max(0, Math.round(v * 2) / 2));
+  v = Math.min(12, Math.max(0, Math.round(v * 4) / 4));
   inp.value = v.toFixed(2);
 }
 function spinnerClamp(inputId) {
   const inp = document.getElementById(inputId);
   if (!inp) return;
   let v = parseFloat(inp.value) || 0;
-  v = Math.min(12, Math.max(0, Math.round(v * 2) / 2));
+  v = Math.min(12, Math.max(0, Math.round(v * 4) / 4));
   inp.value = v.toFixed(2);
 }
 function spinnerFieldHTML(inputId, value) {
   return `<div style="display:flex; align-items:center; gap:4px;">
-    <button type="button" onclick="spinnerStep('${inputId}', -0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
-    <input type="number" id="${inputId}" min="0" max="12" step="0.5" inputmode="decimal" value="${value.toFixed(2)}" onchange="spinnerClamp('${inputId}')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
-    <button type="button" onclick="spinnerStep('${inputId}', 0.5)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
+    <button type="button" onclick="spinnerStep('${inputId}', -0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">−</button>
+    <input type="number" id="${inputId}" min="0" max="12" step="0.25" inputmode="decimal" value="${value.toFixed(2)}" onchange="spinnerClamp('${inputId}')" style="width:100%; text-align:center; padding:8px 2px; border:1px solid #ddd; border-radius:4px;">
+    <button type="button" onclick="spinnerStep('${inputId}', 0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
   </div>`;
 }
 function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -1041,14 +1041,14 @@ function rowKeyFor(tr) {
 
 function clampHourVal(v) {
   let n = parseFloat(v) || 0;
-  return Math.min(12, Math.max(0, Math.round(n * 2) / 2));
+  return Math.min(12, Math.max(0, Math.round(n * 4) / 4));
 }
 
 function miniSpinnerHTML(id, value) {
   return `<div style="display:flex; align-items:center; gap:2px; justify-content:center;">
-    <button type="button" onclick="spinnerStep('${id}', -0.5)" style="width:20px; height:20px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:12px; cursor:pointer; line-height:1;">−</button>
-    <input type="number" id="${id}" min="0" max="12" step="0.5" inputmode="decimal" value="${value.toFixed(2)}" onchange="spinnerClamp('${id}')" style="width:42px; text-align:center; padding:2px; border:1px solid #ddd; border-radius:3px; font-size:12px;">
-    <button type="button" onclick="spinnerStep('${id}', 0.5)" style="width:20px; height:20px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:12px; cursor:pointer; line-height:1;">+</button>
+    <button type="button" onclick="spinnerStep('${id}', -0.25)" style="width:20px; height:20px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:12px; cursor:pointer; line-height:1;">−</button>
+    <input type="number" id="${id}" min="0" max="12" step="0.25" inputmode="decimal" value="${value.toFixed(2)}" onchange="spinnerClamp('${id}')" style="width:42px; text-align:center; padding:2px; border:1px solid #ddd; border-radius:3px; font-size:12px;">
+    <button type="button" onclick="spinnerStep('${id}', 0.25)" style="width:20px; height:20px; border:1px solid #ccc; border-radius:3px; background:#fff; font-size:12px; cursor:pointer; line-height:1;">+</button>
   </div>`;
 }
 
@@ -1077,9 +1077,10 @@ function renderRowActions(tr) {
 
 // Paints a row's display cells (Project/WorkType/Category/hours/Total) from
 // a given {proj, wt, cat, hours} state, without touching Actions or background.
-function paintRowCells(tr, proj, wt, cat, hours) {
+function paintRowCells(tr, dateVal, proj, wt, cat, hours) {
   const cells = tr.children;
   const total = hours.Office + hours.Shop + hours.Travel + hours.Onsite + hours.OnsiteP;
+  cells[0].textContent = formatDateWithDay(dateVal);
   cells[1].textContent = proj;
   const isPW = loadPWProjects().includes(proj);
   cells[1].style.color = isPW ? '#c62828' : '';
@@ -1113,7 +1114,7 @@ function renderRowFromState(tr) {
   const cells = tr.children;
 
   if (pendingDeletions[key]) {
-    paintRowCells(tr, tr.dataset.proj, tr.dataset.wt, tr.dataset.cat, originalHoursOf(tr));
+    paintRowCells(tr, tr.dataset.date, tr.dataset.proj, tr.dataset.wt, tr.dataset.cat, originalHoursOf(tr));
     tr.style.background = '#fdecea';
     for (let i = 1; i <= 9; i++) cells[i].style.background = '';
     renderDeletedRowActions(tr);
@@ -1122,13 +1123,13 @@ function renderRowFromState(tr) {
 
   if (pendingRowChanges[key]) {
     const p = pendingRowChanges[key];
-    paintRowCells(tr, p.newProj, p.newWt, p.newCat, p.hours);
+    paintRowCells(tr, p.newDate, p.newProj, p.newWt, p.newCat, p.hours);
     tr.style.background = '#fff3cd';
     renderRowActions(tr);
     return;
   }
 
-  paintRowCells(tr, tr.dataset.proj, tr.dataset.wt, tr.dataset.cat, originalHoursOf(tr));
+  paintRowCells(tr, tr.dataset.date, tr.dataset.proj, tr.dataset.wt, tr.dataset.cat, originalHoursOf(tr));
   tr.style.background = '';
   renderRowActions(tr);
 }
@@ -1200,6 +1201,9 @@ function editRow(tr) {
 
   const cells = tr.children; // 0=Date 1=Project 2=WorkType 3=Category 4-8=hours 9=Total 10=Actions
 
+  const currentDateVal = pending ? pending.newDate : tr.dataset.date;
+  cells[0].innerHTML = `<input type="date" id="rowEditDate" value="${escAttr(currentDateVal)}" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box;">`;
+
   const tempProj = loadTempList('zottola_tempProjects');
   const tempWt = loadTempList('zottola_tempWorkTypes');
   // If this row's project/work type has since been removed or renamed in the
@@ -1216,7 +1220,7 @@ function editRow(tr) {
     return `<option value="${escAttr(p)}"${pwStyle} ${p === proj ? 'selected' : ''}>${p}${tempProj.includes(p) ? ' (temp)' : ''}${!projects.includes(p) ? ' (not in current list)' : ''}${pwList.includes(p) ? ' 🔵' : ''}</option>`;
   }).join('')}</select>`;
   cells[2].innerHTML = `<select id="rowEditWt" style="width:100%; padding:4px; font-size:12px;">${wtOptions.map(w => `<option value="${escAttr(w)}" ${w === wt ? 'selected' : ''}>${w}${tempWt.includes(w) ? ' (temp)' : ''}${!workTypes.includes(w) ? ' (not in current list)' : ''}</option>`).join('')}</select>`;
-  cells[3].innerHTML = `<input type="text" id="rowEditCat" value="${escAttr(cat)}" placeholder="e.g., Rework" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box;">`;
+  cells[3].innerHTML = `<textarea id="rowEditCat" placeholder="e.g., Rework" rows="2" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box; font-family:inherit; resize:vertical;">${escAttr(cat)}</textarea>`;
   cells[4].innerHTML = miniSpinnerHTML('rowEditOffice', hours.Office);
   cells[5].innerHTML = miniSpinnerHTML('rowEditShop', hours.Shop);
   cells[6].innerHTML = miniSpinnerHTML('rowEditTravel', hours.Travel);
@@ -1250,6 +1254,11 @@ function editRow(tr) {
 function stageRowEdit(tr) {
   const date = tr.dataset.date, emp = tr.dataset.emp;
   const oldProj = tr.dataset.proj, oldWt = tr.dataset.wt, oldCat = tr.dataset.cat;
+  const newDate = document.getElementById('rowEditDate').value;
+  if (!newDate) {
+    alert('Please select a date.');
+    return;
+  }
   const newProj = document.getElementById('rowEditProj').value;
   const newWt = document.getElementById('rowEditWt').value;
   const newCat = document.getElementById('rowEditCat').value || '';
@@ -1262,7 +1271,7 @@ function stageRowEdit(tr) {
   };
 
   const key = rowKeyFor(tr); // always keyed off the true original, not any prior staged value
-  pendingRowChanges[key] = { date, emp, oldProj, oldWt, oldCat, newProj, newWt, newCat, hours };
+  pendingRowChanges[key] = { date, emp, oldProj, oldWt, oldCat, newDate, newProj, newWt, newCat, hours };
   delete pendingDeletions[key];
 
   renderRowFromState(tr);
@@ -1284,19 +1293,25 @@ function saveAllChanges() {
   const hasDeletions = Object.keys(pendingDeletions).length > 0;
   if (!hasRowChanges && !hasDeletions) return;
 
-  // Edits: project/work type/category/hours all change together.
-  for (const { date, emp, oldProj, oldWt, oldCat, newProj, newWt, newCat, hours } of Object.values(pendingRowChanges)) {
-    const dayData = JSON.parse(localStorage.getItem(getStorageKey(date))) || {};
+  // Edits: date/project/work type/category/hours all change together.
+  for (const { date, emp, oldProj, oldWt, oldCat, newDate, newProj, newWt, newCat, hours } of Object.values(pendingRowChanges)) {
+    const oldDayData = JSON.parse(localStorage.getItem(getStorageKey(date))) || {};
     ['Office', 'Shop', 'Travel', 'Onsite', 'OnsiteP'].forEach(ht => {
-      delete dayData[`${emp}|${oldProj}|${ht}|${oldWt}|${oldCat}`];
+      delete oldDayData[`${emp}|${oldProj}|${ht}|${oldWt}|${oldCat}`];
     });
+    localStorage.setItem(getStorageKey(date), JSON.stringify(oldDayData));
+
+    // If the date changed, the new values land in a DIFFERENT day's bucket
+    // than the one just cleaned up above — otherwise it's the same bucket,
+    // now already re-read fresh in case date/project edits ever coincide.
+    const newDayData = (newDate === date) ? oldDayData : (JSON.parse(localStorage.getItem(getStorageKey(newDate))) || {});
     Object.entries(hours).forEach(([ht, val]) => {
       if (val > 0) {
         const newKey = `${emp}|${newProj}|${ht}|${newWt}|${newCat}`;
-        dayData[newKey] = (dayData[newKey] || 0) + val;
+        newDayData[newKey] = (newDayData[newKey] || 0) + val;
       }
     });
-    localStorage.setItem(getStorageKey(date), JSON.stringify(dayData));
+    localStorage.setItem(getStorageKey(newDate), JSON.stringify(newDayData));
   }
 
   // Deletions.
@@ -1833,6 +1848,7 @@ function addTempProjectUI() {
   }
   inp.value = '';
   renderTempEntriesList();
+  populateAddEntryDropdowns(); // refresh immediately even if Add Entry is already open
 }
 
 function addTempWorkTypeUI() {
@@ -1843,6 +1859,7 @@ function addTempWorkTypeUI() {
   }
   inp.value = '';
   renderTempEntriesList();
+  populateAddEntryDropdowns(); // refresh immediately even if Add Entry is already open
 }
 
 function renderTempEntriesList() {
