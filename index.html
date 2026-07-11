@@ -1202,7 +1202,7 @@ function editRow(tr) {
   const cells = tr.children; // 0=Date 1=Project 2=WorkType 3=Category 4-8=hours 9=Total 10=Actions
 
   const currentDateVal = pending ? pending.newDate : tr.dataset.date;
-  cells[0].innerHTML = `<input type="date" id="rowEditDate" value="${escAttr(currentDateVal)}" style="width:100%; padding:4px; font-size:12px; box-sizing:border-box;">`;
+  cells[0].innerHTML = `<input type="date" id="rowEditDate" value="${escAttr(currentDateVal)}" style="width:100%; min-width:120px; padding:4px; font-size:12px; box-sizing:border-box;">`;
 
   const tempProj = loadTempList('zottola_tempProjects');
   const tempWt = loadTempList('zottola_tempWorkTypes');
