@@ -55,7 +55,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   body { background: white; padding: 0; }
   .container { padding: 0; }
   .header, #summaryWeekRangeLabel { display: none !important; }
-  .tabs, .tabs-wrapper > .tabs, #summary > label, #summary > select, #summary > input, #summary button, #saveChangesBtn { display: none !important; }
+  .tabs, .tabs-wrapper > .tabs, #summary > label, #summary > select, #summary > input, #summary button:not(#summaryContent button), #saveChangesBtn { display: none !important; }
   .tab-content { display: none !important; }
   #summary.tab-content { display: block !important; }
   #summary #summaryContent { display: block !important; }
@@ -156,6 +156,11 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
     <button onclick="addNewEntry()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Add Entry</button>
     <button onclick="hideAddEntryForm()" style="padding: 10px 16px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
   </div>
+</div>
+
+<div style="display: flex; gap: 8px; margin-bottom: 1rem;">
+  <button type="button" id="summaryViewBtnFlat" onclick="setSummaryViewMode('flat')" style="flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">Flat list</button>
+  <button type="button" id="summaryViewBtnDay" onclick="setSummaryViewMode('day')" style="flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">By day</button>
 </div>
 
 <div id="summaryContent"></div>
@@ -799,7 +804,24 @@ function printSummary() {
   const dateStr = document.getElementById('summaryDate').value || new Date().toISOString().split('T')[0];
   const originalTitle = document.title;
   document.title = `Zottola_${emp.replace(/\s+/g, '_')}_Week_${dateStr}`;
-  window.onafterprint = () => { document.title = originalTitle; window.onafterprint = null; };
+
+  // In "By day" mode, collapsed sections are hidden via inline display:none,
+  // which the print CSS can't override (it only forces #summaryContent
+  // itself visible, not nested collapsed content). Force everything open
+  // for the printout, then put it back exactly as it was afterward.
+  const con = document.getElementById('summaryContent');
+  const collapsedEls = con ? [...con.querySelectorAll('div[style*="display:none"], div[style*="display: none"]')] : [];
+  collapsedEls.forEach(el => { el.dataset.wasCollapsedForPrint = 'true'; el.style.display = 'block'; });
+  const collapsedBtns = con ? [...con.querySelectorAll('button[aria-expanded="false"]')] : [];
+  collapsedBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
+
+  const restore = () => {
+    collapsedEls.forEach(el => { el.style.display = 'none'; delete el.dataset.wasCollapsedForPrint; });
+    collapsedBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    document.title = originalTitle;
+    window.onafterprint = null;
+  };
+  window.onafterprint = restore;
   window.print();
 }
 
@@ -943,6 +965,95 @@ function updateSummary() {
 // Track changes for Summary tab
 let pendingRowChanges = {}; // {rowKey: {date,emp,oldProj,oldWt,oldCat,newProj,newWt,newCat,hours}} - staged edits (yellow)
 let pendingDeletions = {}; // {rowKey: {date,emp,proj,wt,cat}} - staged deletions (red)
+let summaryViewMode = 'flat'; // 'flat' (default, fully editable) or 'day' (collapsible, read-only)
+
+function setSummaryViewMode(mode) {
+  summaryViewMode = mode;
+  document.getElementById('summaryViewBtnDay').style.cssText = mode === 'day'
+    ? 'flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; background: #1565c0; color: #fff; border: 1px solid #1565c0;'
+    : 'flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; background: #fff; border: 1px solid #ccc;';
+  document.getElementById('summaryViewBtnFlat').style.cssText = mode === 'flat'
+    ? 'flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; background: #1565c0; color: #fff; border: 1px solid #1565c0;'
+    : 'flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; background: #fff; border: 1px solid #ccc;';
+  updateSummaryView();
+}
+
+function toggleDayGroup(btn) {
+  const body = btn.nextElementSibling;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  btn.setAttribute('aria-expanded', String(!open));
+  const chevron = btn.querySelector('.day-chevron');
+  if (chevron) chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function toggleRowRemarks(btn) {
+  const box = btn.nextElementSibling;
+  const open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'block';
+  btn.setAttribute('aria-expanded', String(!open));
+}
+
+// Read-only day-grouped view of one employee's week. Each day is collapsible
+// (today's date starts expanded, others collapsed); each row within a day is
+// also collapsible, revealing its Remarks on tap. This does NOT support
+// editing/deleting — use the Flat list view (the pencil/delete icons) for that.
+function buildDayViewHtml(emp, empDataForEmp, pwProjectsList) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const dates = Object.keys(empDataForEmp).sort();
+  let html = '';
+
+  dates.forEach(date => {
+    let dayOffice = 0, dayShop = 0, dayTravel = 0, dayOnsite = 0, dayOnsiteP = 0;
+    const rows = [];
+    const projects = Object.keys(empDataForEmp[date]).sort();
+    projects.forEach(proj => {
+      const workTypes = Object.keys(empDataForEmp[date][proj]).sort();
+      workTypes.forEach(workType => {
+        const categories = Object.keys(empDataForEmp[date][proj][workType]);
+        categories.forEach(cat => {
+          const catData = empDataForEmp[date][proj][workType][cat];
+          dayOffice += catData.office; dayShop += catData.shop; dayTravel += catData.travel;
+          dayOnsite += catData.onsite; dayOnsiteP += catData.onsiteP;
+          rows.push({ proj, workType, cat, catData });
+        });
+      });
+    });
+    const dayTotal = dayOffice + dayShop + dayTravel + dayOnsite + dayOnsiteP;
+    const isToday = date === todayStr;
+
+    html += `<div style="border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 8px; overflow: hidden;">`;
+    html += `<button type="button" onclick="toggleDayGroup(this)" aria-expanded="${isToday}" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#f5f5f5; border:none; cursor:pointer; font-size:13px; text-align:left;">
+      <span style="display:flex; align-items:center; gap:8px;">
+        <span class="day-chevron" style="display:inline-block; transition:transform 0.15s; transform: rotate(${isToday ? '180deg' : '0deg'});">▾</span>
+        <span style="font-weight:600;">${formatDateWithDay(date)}</span>
+        ${isToday ? '<span style="font-size:11px; padding:2px 8px; border-radius:4px; background:#e3f2fd; color:#1565c0;">Today</span>' : ''}
+      </span>
+      <span style="font-weight:600;">${dayTotal.toFixed(2)}h</span>
+    </button>`;
+
+    html += `<div style="display:${isToday ? 'block' : 'none'};">`;
+    rows.forEach(r => {
+      const rt = r.catData.office + r.catData.shop + r.catData.travel + r.catData.onsite + r.catData.onsiteP;
+      const isPW = pwProjectsList.includes(r.proj);
+      html += `<div style="border-top: 1px solid #e0e0e0;">
+        <button type="button" onclick="toggleRowRemarks(this)" aria-expanded="false" style="width:100%; display:grid; grid-template-columns: minmax(0,1.4fr) minmax(0,1.4fr) repeat(4, minmax(0,0.8fr)) minmax(0,0.8fr); gap:4px; align-items:center; padding:6px 12px; background:none; border:none; cursor:pointer; font-size:12px; text-align:left;">
+          <span style="${isPW ? 'color:#c62828; font-weight:600;' : ''}">${r.proj}</span>
+          <span style="color:#666;">${r.workType}</span>
+          <span style="text-align:right;">${r.catData.office > 0 ? r.catData.office.toFixed(2) : '—'}</span>
+          <span style="text-align:right;">${r.catData.shop > 0 ? r.catData.shop.toFixed(2) : '—'}</span>
+          <span style="text-align:right;">${r.catData.travel > 0 ? r.catData.travel.toFixed(2) : '—'}</span>
+          <span style="text-align:right;">${r.catData.onsite > 0 ? r.catData.onsite.toFixed(2) : '—'}</span>
+          <span style="text-align:right; font-weight:600;">${rt.toFixed(2)}</span>
+        </button>
+        <div style="display:none; padding:6px 12px 10px 12px; font-size:12px; color:#666;">${r.cat ? escAttr(r.cat) : 'No remarks'}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  return html;
+}
 
 function showAddEntryForm() {
   document.getElementById('addEntryForm').style.display = 'block';
@@ -1415,6 +1526,29 @@ function updateSummaryView() {
     
     let empHtml = `<div style="margin-bottom: 2rem;"><h3 style="font-size: 16px; margin: 1rem 0 0.5rem; font-weight: 600;">${emp}</h3>`;
     
+    const dates = Object.keys(empData[emp]).sort();
+    let empOfficeTotal = 0, empShopTotal = 0, empTravelTotal = 0, empOnsiteRegTotal = 0, empOnsitePWTotal = 0;
+
+    if (summaryViewMode === 'day') {
+      // Totals still need computing for the summary box below, even though
+      // the day view builds its own per-day totals separately.
+      dates.forEach(date => {
+        const projects = Object.keys(empData[emp][date]);
+        projects.forEach(proj => {
+          const workTypes = Object.keys(empData[emp][date][proj]);
+          workTypes.forEach(workType => {
+            const categories = Object.keys(empData[emp][date][proj][workType]);
+            categories.forEach(cat => {
+              const catData = empData[emp][date][proj][workType][cat];
+              empOfficeTotal += catData.office; empShopTotal += catData.shop; empTravelTotal += catData.travel;
+              empOnsiteRegTotal += catData.onsite; empOnsitePWTotal += catData.onsiteP;
+            });
+          });
+        });
+      });
+      empHtml += buildDayViewHtml(emp, empData[emp], pwProjectsList);
+    } else {
+
     // Create table
     empHtml += `<div style="overflow-x: auto; margin-bottom: 1rem;">
       <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
@@ -1434,9 +1568,6 @@ function updateSummaryView() {
           </tr>
         </thead>
         <tbody>`;
-    
-    const dates = Object.keys(empData[emp]).sort();
-    let empOfficeTotal = 0, empShopTotal = 0, empTravelTotal = 0, empOnsiteRegTotal = 0, empOnsitePWTotal = 0;
     
     dates.forEach(date => {
       const projects = Object.keys(empData[emp][date]).sort();
@@ -1474,23 +1605,29 @@ function updateSummaryView() {
       });
     });
     
-    // Summary row
+    // Combined = Office + Shop + Travel. Onsite Regular and Prevailing Wage are their own lines.
     const empCombined = empOfficeTotal + empShopTotal + empTravelTotal;
     const empGrandTotal = empCombined + empOnsiteRegTotal + empOnsitePWTotal;
-    empHtml += `<tr style="background: #e3f2fd; font-weight: 600; border-top: 2px solid #1565c0;">
-      <td colspan="4" style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">WEEKLY TOTALS</td>
-      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOfficeTotal.toFixed(2)}</td>
-      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empShopTotal.toFixed(2)}</td>
-      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empTravelTotal.toFixed(2)}</td>
-      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsiteRegTotal.toFixed(2)}</td>
-      <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsitePWTotal.toFixed(2)}</td>
-      <td style="padding: 10px; text-align: right;">${empGrandTotal.toFixed(2)}</td>
-      <td></td>
-    </tr>`;
-    
+
+    if (summaryViewMode !== 'day') {
+      empHtml += `<tr style="background: #e3f2fd; font-weight: 600; border-top: 2px solid #1565c0;">
+        <td colspan="4" style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">WEEKLY TOTALS</td>
+        <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOfficeTotal.toFixed(2)}</td>
+        <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empShopTotal.toFixed(2)}</td>
+        <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empTravelTotal.toFixed(2)}</td>
+        <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsiteRegTotal.toFixed(2)}</td>
+        <td style="padding: 10px; text-align: right; border-right: 1px solid #1565c0;">${empOnsitePWTotal.toFixed(2)}</td>
+        <td style="padding: 10px; text-align: right;">${empGrandTotal.toFixed(2)}</td>
+        <td></td>
+      </tr>`;
+    }
+
     empHtml += `</tbody></table></div>`;
-    
+    } // end flat-list branch
+
     // Combined = Office + Shop + Travel. Onsite Regular and Prevailing Wage are their own lines.
+    const empCombined = empOfficeTotal + empShopTotal + empTravelTotal;
+    const empGrandTotal = empCombined + empOnsiteRegTotal + empOnsitePWTotal;
     empHtml += `<div style="background: #f9f9f9; padding: 16px; border-radius: 4px; color: #333;">
       <div style="font-size: 13px; margin-bottom: 8px;"><strong>Combined (Office + Shop + Travel):</strong> ${empCombined.toFixed(2)}h</div>
       <div style="font-size: 13px; margin-bottom: 8px;"><strong>Onsite (Regular):</strong> ${empOnsiteRegTotal.toFixed(2)}h</div>
