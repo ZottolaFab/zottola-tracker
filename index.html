@@ -55,7 +55,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   body { background: white; padding: 0; }
   .container { padding: 0; }
   .header, #summaryWeekRangeLabel { display: none !important; }
-  .tabs, .tabs-wrapper > .tabs, #summary > label, #summary > select, #summary > input, #summary button:not(#summaryContent button), #saveChangesBtn { display: none !important; }
+  .tabs, .tabs-wrapper > .tabs, #summary > label, #summary > select, #summary > input, #summary button:not(#summaryContent button), #unifiedSaveBtn { display: none !important; }
   .tab-content { display: none !important; }
   #summary.tab-content { display: block !important; }
   #summary #summaryContent { display: block !important; }
@@ -108,8 +108,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 
 <div style="margin-bottom: 1.5rem; display: flex; gap: 12px;">
   <button onclick="showAddEntryForm()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">+ Add New Entry</button>
-  <button id="saveChangesBtn" onclick="saveAllChanges()" style="padding: 10px 16px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; display: none;">Save Changes</button>
-  <button id="addEntrySaveBtn" onclick="addNewEntry()" style="padding: 10px 16px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; display: none;">Save</button>
+  <button id="unifiedSaveBtn" onclick="handleUnifiedSave()" style="padding: 10px 16px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; display: none;">Save</button>
   <button id="addEntryCancelBtn" onclick="hideAddEntryForm()" style="padding: 10px 16px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Cancel</button>
 </div>
 
@@ -119,7 +118,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
     <div><label>Date</label><input type="date" id="addDate" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></div>
     <div><label>Employee</label><input type="text" id="addEmpDisplay" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;"></div>
     <div><label>Project</label><select id="addProj" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onchange="onAddProjChange()"></select><div id="addPwBadge" style="margin-top: 8px; font-weight: 600; color: #d32f2f; display: none; padding: 4px 8px; background: #ffebee; border-radius: 4px; font-size: 12px; text-align: center;">🔵 PW PROJECT</div></div>
-    <div><label>Work Type</label><select id="addWorkType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></select></div>
+    <div><label id="addWorkTypeLabel">Work Type</label><select id="addWorkType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></select></div>
     <div><label>Remarks (optional)</label><textarea id="addCategory" placeholder="e.g., Rework, Rush" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: inherit; resize: vertical;"></textarea></div>
   </div>
   
@@ -576,6 +575,10 @@ function onAddProjChange() {
   } else {
     addPwBadge.style.display = 'none';
   }
+  // Vacation and Off don't require a work type — flag it in the label so
+  // it's clear that's intentional, not a missed field.
+  const wtLabel = document.getElementById('addWorkTypeLabel');
+  wtLabel.textContent = (proj === 'Vacation' || proj === 'Off') ? 'Work Type (optional)' : 'Work Type';
   // Prevent stale hours from a previous project selection accidentally
   // carrying over onto whatever project is picked next.
   ['addOffice', 'addShop', 'addTravel', 'addOnsite'].forEach(id => {
@@ -1070,8 +1073,8 @@ function hasUnsavedAddEntryData() {
 
 function showAddEntryForm() {
   document.getElementById('addEntryForm').style.display = 'block';
-  document.getElementById('addEntrySaveBtn').style.display = 'inline-block';
   document.getElementById('addEntryCancelBtn').style.display = 'inline-block';
+  updateUnifiedSaveVisibility();
   populateAddEntryDropdowns();
   
   // Auto-fill employee if selected in View for
@@ -1087,8 +1090,8 @@ function showAddEntryForm() {
 
 function hideAddEntryForm() {
   document.getElementById('addEntryForm').style.display = 'none';
-  document.getElementById('addEntrySaveBtn').style.display = 'none';
   document.getElementById('addEntryCancelBtn').style.display = 'none';
+  updateUnifiedSaveVisibility();
   document.getElementById('addDate').value = '';
   document.getElementById('addEmpDisplay').value = '';
   document.getElementById('addProj').value = '';
@@ -1129,7 +1132,9 @@ function addNewEntry() {
   if (!date) { alert('Please select a date.'); return; }
   if (!emp) { alert('No employee selected — pick one from "View for" on the Summary tab first.'); return; }
   if (!proj) { alert('Please select a project.'); return; }
-  if (!wt) { alert('Please select a work type.'); return; }
+  // Vacation and Off aren't worked categories — there's no meaningful work
+  // type for a day someone didn't work. Every other project still requires one.
+  if (!wt && proj !== 'Vacation' && proj !== 'Off') { alert('Please select a work type.'); return; }
   
   // "Off" doesn't require any hours — it's a flag that the employee was off
   // that day, not a worked category. Every other project still requires
@@ -1162,7 +1167,7 @@ function addNewEntry() {
   hideAddEntryForm();
   pendingRowChanges = {};
   pendingDeletions = {};
-  document.getElementById('saveChangesBtn').style.display = 'none';
+  updateUnifiedSaveVisibility();
   updateSummaryView();
 }
 
@@ -1282,14 +1287,41 @@ function renderDeletedRowActions(tr) {
   undoBtn.addEventListener('click', () => {
     delete pendingDeletions[rowKeyFor(tr)];
     renderRowFromState(tr);
-    updateSaveChangesVisibility();
+    updateUnifiedSaveVisibility();
   });
   actionsCell.appendChild(undoBtn);
 }
 
-function updateSaveChangesVisibility() {
+function updateUnifiedSaveVisibility() {
+  const formOpen = document.getElementById('addEntryForm').style.display !== 'none';
   const anyPending = Object.keys(pendingRowChanges).length > 0 || Object.keys(pendingDeletions).length > 0;
-  document.getElementById('saveChangesBtn').style.display = anyPending ? 'inline-block' : 'none';
+  document.getElementById('unifiedSaveBtn').style.display = (formOpen || anyPending) ? 'inline-block' : 'none';
+}
+
+function handleUnifiedSave() {
+  const formOpen = document.getElementById('addEntryForm').style.display !== 'none';
+
+  if (formOpen) {
+    if (hasUnsavedAddEntryData()) {
+      addNewEntry();
+      // addNewEntry() validates internally and alerts + leaves the form open
+      // if something's missing (date, project, hours, etc). If that happened,
+      // stop here so the user fixes it before anything else runs — don't
+      // silently move on to saving pending row edits too.
+      if (document.getElementById('addEntryForm').style.display !== 'none') return;
+    } else {
+      // Form was open but nothing was actually filled in — nothing to add,
+      // just close it and fall through to any pending row edits below.
+      hideAddEntryForm();
+    }
+  }
+
+  const anyPending = Object.keys(pendingRowChanges).length > 0 || Object.keys(pendingDeletions).length > 0;
+  if (anyPending) {
+    saveAllChanges();
+  }
+
+  updateUnifiedSaveVisibility();
 }
 
 // Single pencil-triggered editor for the WHOLE row: project, work type,
@@ -1411,7 +1443,7 @@ function stageRowEdit(tr) {
   delete pendingDeletions[key];
 
   renderRowFromState(tr);
-  updateSaveChangesVisibility();
+  updateUnifiedSaveVisibility();
 }
 
 // Stages a delete: whole row turns red, Actions collapses to a single Undo
@@ -1421,7 +1453,7 @@ function stageDeleteRow(tr) {
   delete pendingRowChanges[key];
   pendingDeletions[key] = { date: tr.dataset.date, emp: tr.dataset.emp, proj: tr.dataset.proj, wt: tr.dataset.wt, cat: tr.dataset.cat };
   renderRowFromState(tr);
-  updateSaveChangesVisibility();
+  updateUnifiedSaveVisibility();
 }
 
 function saveAllChanges() {
@@ -1469,7 +1501,7 @@ function saveAllChanges() {
   backupData();
   pendingRowChanges = {};
   pendingDeletions = {};
-  document.getElementById('saveChangesBtn').style.display = 'none';
+  updateUnifiedSaveVisibility();
   updateSummaryView();
 }
 
@@ -1674,7 +1706,7 @@ function updateSummaryView() {
   
   pendingRowChanges = {};
   pendingDeletions = {};
-  document.getElementById('saveChangesBtn').style.display = 'none';
+  updateUnifiedSaveVisibility();
 }
 
 function updateWeekExportPreview() {
