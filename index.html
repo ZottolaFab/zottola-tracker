@@ -153,7 +153,7 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
   </div>
   
   <div style="display: flex; gap: 12px;">
-    <button onclick="addNewEntry()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Add Entry</button>
+    <button onclick="addNewEntry()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Save</button>
     <button onclick="hideAddEntryForm()" style="padding: 10px 16px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
   </div>
 </div>
@@ -1053,6 +1053,18 @@ function buildDayViewHtml(emp, empDataForEmp, pwProjectsList) {
   });
 
   return html;
+}
+
+function hasUnsavedAddEntryData() {
+  const form = document.getElementById('addEntryForm');
+  if (!form || form.style.display === 'none') return false;
+  const proj = document.getElementById('addProj').value;
+  const office = parseFloat(document.getElementById('addOffice').value) || 0;
+  const shop = parseFloat(document.getElementById('addShop').value) || 0;
+  const travel = parseFloat(document.getElementById('addTravel').value) || 0;
+  const onsite = parseFloat(document.getElementById('addOnsite').value) || 0;
+  // A project selected or any hour entered counts as data worth saving.
+  return !!proj || office > 0 || shop > 0 || travel > 0 || onsite > 0;
 }
 
 function showAddEntryForm() {
@@ -2493,6 +2505,13 @@ function updateWorkTypeList() {
 }
 
 function switchTab(tab, event) {
+  if (hasUnsavedAddEntryData()) {
+    const proceed = confirm('You have an entry filled in that hasn\'t been saved yet.\n\nClick Cancel to go back and hit Save, or OK to leave this tab and lose it.');
+    if (!proceed) {
+      if (event) event.preventDefault();
+      return;
+    }
+  }
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
@@ -2503,6 +2522,13 @@ function switchTab(tab, event) {
   if (tab === 'admin') { renderPWProjectList(); renderTempEntriesList(); updateSyncStatusDisplay(); updateBackupDisplay(); }
   if (tab === 'settings') updateBackupDisplay();
 }
+
+window.addEventListener('beforeunload', function(e) {
+  if (hasUnsavedAddEntryData()) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 init();
 </script>
