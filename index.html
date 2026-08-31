@@ -109,6 +109,8 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
 <div style="margin-bottom: 1.5rem; display: flex; gap: 12px;">
   <button onclick="showAddEntryForm()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">+ Add New Entry</button>
   <button id="saveChangesBtn" onclick="saveAllChanges()" style="padding: 10px 16px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; display: none;">Save Changes</button>
+  <button id="addEntrySaveBtn" onclick="addNewEntry()" style="padding: 10px 16px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; display: none;">Save</button>
+  <button id="addEntryCancelBtn" onclick="hideAddEntryForm()" style="padding: 10px 16px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Cancel</button>
 </div>
 
 <div id="addEntryForm" style="display: none; background: #f5f5f5; padding: 16px; border-radius: 4px; margin-bottom: 1.5rem; border: 1px solid #ddd;">
@@ -150,11 +152,6 @@ button.btn-orange { background: #FF9800; color: white; border: none; }
         <button type="button" onclick="spinnerStep('addOnsite', 0.25)" style="width:32px; height:32px; border:1px solid #ccc; border-radius:4px; background:#f5f5f5; font-size:16px; cursor:pointer; line-height:1;">+</button>
       </div>
     </div>
-  </div>
-  
-  <div style="display: flex; gap: 12px;">
-    <button onclick="addNewEntry()" style="padding: 10px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Save</button>
-    <button onclick="hideAddEntryForm()" style="padding: 10px 16px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
   </div>
 </div>
 
@@ -632,8 +629,12 @@ function updateWeekView() {
   weekDates.forEach(dStr => {
     const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
     Object.entries(dayData).forEach(([dataKey, hours]) => {
-      if (!hours || hours <= 0) return;
       const parts = dataKey.split('|');
+      // "Off" entries are stored as an explicit zero and should still count
+      // as a real entry for the week (so the employee doesn't vanish from
+      // Week View on a week where every day is Off) — every other project
+      // still requires hours > 0 to count.
+      if ((!hours || hours <= 0) && parts[1] !== 'Off') return;
       if (parts.length < 4) return;
       const emp = parts[0];
       empTotals[emp] = (empTotals[emp] || 0) + hours;
@@ -1069,6 +1070,8 @@ function hasUnsavedAddEntryData() {
 
 function showAddEntryForm() {
   document.getElementById('addEntryForm').style.display = 'block';
+  document.getElementById('addEntrySaveBtn').style.display = 'inline-block';
+  document.getElementById('addEntryCancelBtn').style.display = 'inline-block';
   populateAddEntryDropdowns();
   
   // Auto-fill employee if selected in View for
@@ -1084,6 +1087,8 @@ function showAddEntryForm() {
 
 function hideAddEntryForm() {
   document.getElementById('addEntryForm').style.display = 'none';
+  document.getElementById('addEntrySaveBtn').style.display = 'none';
+  document.getElementById('addEntryCancelBtn').style.display = 'none';
   document.getElementById('addDate').value = '';
   document.getElementById('addEmpDisplay').value = '';
   document.getElementById('addProj').value = '';
@@ -1126,8 +1131,10 @@ function addNewEntry() {
   if (!proj) { alert('Please select a project.'); return; }
   if (!wt) { alert('Please select a work type.'); return; }
   
-  // Check if at least one hour type has a value
-  if (office === 0 && shop === 0 && travel === 0 && onsite === 0) {
+  // "Off" doesn't require any hours — it's a flag that the employee was off
+  // that day, not a worked category. Every other project still requires
+  // at least one hour value.
+  if (proj !== 'Off' && office === 0 && shop === 0 && travel === 0 && onsite === 0) {
     alert('Please enter at least one hour value');
     return;
   }
@@ -1143,6 +1150,12 @@ function addNewEntry() {
   if (onsite > 0) {
     const onsiteType = prevailingWage ? 'OnsiteP' : 'Onsite';
     dateData[`${emp}|${proj}|${onsiteType}|${wt}|${cat}`] = onsite;
+  }
+  // "Off" with no hours entered: store an explicit zero marker so the day
+  // still shows up everywhere (Week View, weekly table, CSV export) instead
+  // of silently disappearing since every hour value is 0.
+  if (proj === 'Off' && office === 0 && shop === 0 && travel === 0 && onsite === 0) {
+    dateData[`${emp}|${proj}|Office|${wt}|${cat}`] = 0;
   }
   
   localStorage.setItem(`zottola_hours_${dateKey}`, JSON.stringify(dateData));
@@ -1428,12 +1441,19 @@ function saveAllChanges() {
     // than the one just cleaned up above — otherwise it's the same bucket,
     // now already re-read fresh in case date/project edits ever coincide.
     const newDayData = (newDate === date) ? oldDayData : (JSON.parse(localStorage.getItem(getStorageKey(newDate))) || {});
+    let anyHourSaved = false;
     Object.entries(hours).forEach(([ht, val]) => {
       if (val > 0) {
         const newKey = `${emp}|${newProj}|${ht}|${newWt}|${newCat}`;
         newDayData[newKey] = (newDayData[newKey] || 0) + val;
+        anyHourSaved = true;
       }
     });
+    // "Off" doesn't require any hours — if every field is 0, store a zero
+    // marker instead of silently deleting the row on save.
+    if (!anyHourSaved && newProj === 'Off') {
+      newDayData[`${emp}|${newProj}|Office|${newWt}|${newCat}`] = 0;
+    }
     localStorage.setItem(getStorageKey(newDate), JSON.stringify(newDayData));
   }
 
@@ -1504,8 +1524,10 @@ function updateSummaryView() {
       const dateData = JSON.parse(localStorage.getItem(key)) || {};
       
       for (const [dataKey, hours] of Object.entries(dateData)) {
-        if (hours > 0) {
-          const parts = dataKey.split('|');
+        const parts = dataKey.split('|');
+        // "Off" entries are stored as an explicit zero and should still
+        // render as a row (see Week View comment above for why).
+        if (hours > 0 || parts[1] === 'Off') {
           if (parts.length >= 4) {
             const [emp, proj, hourType, workType] = [parts[0], parts[1], parts[2], parts[3]];
             const category = parts[4] || '';
@@ -1700,8 +1722,10 @@ function csvField(v) {
 function groupDayDataForCSV(dayData) {
   const rows = {};
   Object.entries(dayData).forEach(([dataKey, hours]) => {
-    if (!hours || hours <= 0) return;
     const parts = dataKey.split('|');
+    // "Off" entries are stored as an explicit zero and should still export
+    // as a Total Hours = 0.00 row (see Week View comment above for why).
+    if ((!hours || hours <= 0) && parts[1] !== 'Off') return;
     if (parts.length < 4) return;
     const [emp, proj, hourType, workType] = parts;
     const category = parts[4] || '';
@@ -1811,8 +1835,11 @@ function exportWeeklySummary() {
     weekDates.forEach(dStr => {
       const dayData = JSON.parse(localStorage.getItem(getStorageKey(dStr))) || {};
       Object.entries(dayData).forEach(([dataKey, hours]) => {
-        if (!hours || hours <= 0) return;
         const parts = dataKey.split('|');
+        // "Off" entries are stored as an explicit zero and should still be
+        // counted (they contribute 0 to totals either way, but this keeps
+        // the employee/project listed rather than silently dropped).
+        if ((!hours || hours <= 0) && parts[1] !== 'Off') return;
         if (parts.length < 4) return;
         const emp = parts[0], proj = parts[1], hourType = parts[2];
         empTotals[emp] = (empTotals[emp] || 0) + hours;
